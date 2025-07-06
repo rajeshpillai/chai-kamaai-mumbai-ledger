@@ -1,5 +1,15 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+export interface SalaryStructure {
+  basic: number;
+  hra: number;
+  da: number; // Dearness Allowance
+  specialAllowance: number;
+  medicalAllowance: number;
+  conveyanceAllowance: number;
+  otherAllowances: number;
+  ctc: number; // Cost to Company
+}
 
 export interface Employee {
   id: number;
@@ -9,7 +19,8 @@ export interface Employee {
   role: string;
   department: string;
   location: string;
-  salary: number;
+  salary: number; // Keep for backward compatibility
+  salaryStructure: SalaryStructure;
   joinDate: string;
   dateOfBirth: string;
   status: 'Active' | 'On Leave' | 'Inactive';
@@ -23,6 +34,7 @@ export interface Employee {
   ifscCode: string;
   bankName: string;
   avatar: string;
+  state: string; // For Professional Tax calculation
 }
 
 interface EmployeeContextType {
@@ -30,9 +42,31 @@ interface EmployeeContextType {
   addEmployee: (employee: Omit<Employee, 'id' | 'avatar'>) => void;
   updateEmployee: (id: number, employee: Partial<Employee>) => void;
   deleteEmployee: (id: number) => void;
+  calculateSalaryStructure: (ctc: number) => SalaryStructure;
 }
 
 const EmployeeContext = createContext<EmployeeContextType | undefined>(undefined);
+
+const calculateDefaultSalaryStructure = (ctc: number): SalaryStructure => {
+  const basic = Math.round(ctc * 0.5); // 50% of CTC
+  const hra = Math.round(basic * 0.4); // 40% of Basic
+  const da = Math.round(basic * 0.12); // 12% of Basic
+  const specialAllowance = Math.round(ctc * 0.15); // 15% of CTC
+  const medicalAllowance = 1250; // Fixed as per IT Act
+  const conveyanceAllowance = 1600; // Fixed as per IT Act
+  const otherAllowances = ctc - (basic + hra + da + specialAllowance + medicalAllowance + conveyanceAllowance);
+  
+  return {
+    basic,
+    hra,
+    da,
+    specialAllowance,
+    medicalAllowance,
+    conveyanceAllowance,
+    otherAllowances: Math.max(0, otherAllowances),
+    ctc
+  };
+};
 
 const initialEmployees: Employee[] = [
   {
@@ -44,6 +78,7 @@ const initialEmployees: Employee[] = [
     department: "Operations",
     location: "Bandra West",
     salary: 45000,
+    salaryStructure: calculateDefaultSalaryStructure(540000), // Annual CTC
     joinDate: "2023-03-15",
     dateOfBirth: "1990-07-12",
     status: "Active",
@@ -56,7 +91,8 @@ const initialEmployees: Employee[] = [
     bankAccountNumber: "12345678901234",
     ifscCode: "HDFC0001234",
     bankName: "HDFC Bank",
-    avatar: "PS"
+    avatar: "PS",
+    state: "Maharashtra"
   },
   {
     id: 2,
@@ -67,6 +103,7 @@ const initialEmployees: Employee[] = [
     department: "Food & Beverage",
     location: "Andheri East",
     salary: 25000,
+    salaryStructure: calculateDefaultSalaryStructure(300000),
     joinDate: "2023-06-20",
     dateOfBirth: "1995-02-18",
     status: "Active",
@@ -79,7 +116,8 @@ const initialEmployees: Employee[] = [
     bankAccountNumber: "23456789012345",
     ifscCode: "ICICI0005678",
     bankName: "ICICI Bank",
-    avatar: "RP"
+    avatar: "RP",
+    state: "Maharashtra"
   },
   {
     id: 3,
@@ -90,6 +128,7 @@ const initialEmployees: Employee[] = [
     department: "Customer Service",
     location: "Powai",
     salary: 22000,
+    salaryStructure: calculateDefaultSalaryStructure(264000),
     joinDate: "2023-08-10",
     dateOfBirth: "1998-11-05",
     status: "Active",
@@ -102,7 +141,8 @@ const initialEmployees: Employee[] = [
     bankAccountNumber: "34567890123456",
     ifscCode: "SBI0009012",
     bankName: "State Bank of India",
-    avatar: "SK"
+    avatar: "SK",
+    state: "Maharashtra"
   },
   {
     id: 4,
@@ -113,6 +153,7 @@ const initialEmployees: Employee[] = [
     department: "Food Preparation",
     location: "Bandra West",
     salary: 20000,
+    salaryStructure: calculateDefaultSalaryStructure(240000),
     joinDate: "2023-09-05",
     dateOfBirth: "1992-04-22",
     status: "On Leave",
@@ -125,7 +166,8 @@ const initialEmployees: Employee[] = [
     bankAccountNumber: "45678901234567",
     ifscCode: "AXIS0003456",
     bankName: "Axis Bank",
-    avatar: "AS"
+    avatar: "AS",
+    state: "Maharashtra"
   },
   {
     id: 5,
@@ -136,6 +178,7 @@ const initialEmployees: Employee[] = [
     department: "Operations",
     location: "Juhu",
     salary: 35000,
+    salaryStructure: calculateDefaultSalaryStructure(420000),
     joinDate: "2023-01-10",
     dateOfBirth: "1988-09-15",
     status: "Active",
@@ -148,12 +191,17 @@ const initialEmployees: Employee[] = [
     bankAccountNumber: "56789012345678",
     ifscCode: "KOTAK0007890",
     bankName: "Kotak Mahindra Bank",
-    avatar: "MR"
+    avatar: "MR",
+    state: "Maharashtra"
   }
 ];
 
 export const EmployeeProvider = ({ children }: { children: ReactNode }) => {
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+
+  const calculateSalaryStructure = (ctc: number): SalaryStructure => {
+    return calculateDefaultSalaryStructure(ctc);
+  };
 
   const addEmployee = (employeeData: Omit<Employee, 'id' | 'avatar'>) => {
     const newId = Math.max(...employees.map(e => e.id)) + 1;
@@ -183,7 +231,8 @@ export const EmployeeProvider = ({ children }: { children: ReactNode }) => {
       employees,
       addEmployee,
       updateEmployee,
-      deleteEmployee
+      deleteEmployee,
+      calculateSalaryStructure
     }}>
       {children}
     </EmployeeContext.Provider>

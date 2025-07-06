@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,7 @@ const SalarySlips = () => {
 
   const SalarySlipCard = ({ record }: { record: PayrollRecord }) => {
     const employee = employees.find(e => e.id === record.employeeId);
-    const totalDeductions = record.deductions.pf + record.deductions.esi + record.deductions.tds + record.deductions.lateDeduction + record.deductions.absentDeduction;
+    const totalDeductions = record.deductions.pf + record.deductions.esi + record.deductions.professionalTax + record.deductions.tds + record.deductions.lateDeduction + record.deductions.absentDeduction;
     
     return (
       <Card className="p-6 space-y-4">
@@ -84,22 +83,50 @@ const SalarySlips = () => {
           {/* Earnings */}
           <div className="bg-green-50 rounded-lg p-4">
             <h5 className="font-medium text-green-800 mb-2">Earnings</h5>
-            <div className="flex justify-between items-center">
-              <span>Basic Salary</span>
-              <span className="font-medium">₹{record.basicSalary.toLocaleString()}</span>
+            <div className="space-y-1">
+              <div className="flex justify-between items-center">
+                <span>Basic Salary</span>
+                <span className="font-medium">₹{record.salaryBreakdown.basic.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>House Rent Allowance (HRA)</span>
+                <span className="font-medium">₹{record.salaryBreakdown.hra.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Dearness Allowance (DA)</span>
+                <span className="font-medium">₹{record.salaryBreakdown.da.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Special Allowance</span>
+                <span className="font-medium">₹{record.salaryBreakdown.specialAllowance.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Medical Allowance</span>
+                <span className="font-medium">₹{record.salaryBreakdown.medicalAllowance.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Conveyance Allowance</span>
+                <span className="font-medium">₹{record.salaryBreakdown.conveyanceAllowance.toLocaleString()}</span>
+              </div>
+              {record.salaryBreakdown.otherAllowances > 0 && (
+                <div className="flex justify-between items-center">
+                  <span>Other Allowances</span>
+                  <span className="font-medium">₹{record.salaryBreakdown.otherAllowances.toLocaleString()}</span>
+                </div>
+              )}
+              {record.overtimePay > 0 && (
+                <div className="flex justify-between items-center">
+                  <span>Overtime Pay</span>
+                  <span className="font-medium">₹{record.overtimePay.toLocaleString()}</span>
+                </div>
+              )}
+              {record.bonuses > 0 && (
+                <div className="flex justify-between items-center">
+                  <span>Bonuses</span>
+                  <span className="font-medium">₹{record.bonuses.toLocaleString()}</span>
+                </div>
+              )}
             </div>
-            {record.overtimePay > 0 && (
-              <div className="flex justify-between items-center">
-                <span>Overtime Pay</span>
-                <span className="font-medium">₹{record.overtimePay.toLocaleString()}</span>
-              </div>
-            )}
-            {record.bonuses > 0 && (
-              <div className="flex justify-between items-center">
-                <span>Bonuses</span>
-                <span className="font-medium">₹{record.bonuses.toLocaleString()}</span>
-              </div>
-            )}
             <div className="border-t mt-2 pt-2 flex justify-between items-center font-semibold">
               <span>Gross Salary</span>
               <span>₹{record.grossSalary.toLocaleString()}</span>
@@ -114,13 +141,21 @@ const SalarySlips = () => {
                 <span>Provident Fund (PF)</span>
                 <span className="font-medium">₹{record.deductions.pf.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span>ESI</span>
-                <span className="font-medium">₹{record.deductions.esi.toLocaleString()}</span>
-              </div>
+              {record.deductions.esi > 0 && (
+                <div className="flex justify-between items-center">
+                  <span>Employee State Insurance (ESI)</span>
+                  <span className="font-medium">₹{record.deductions.esi.toLocaleString()}</span>
+                </div>
+              )}
+              {record.deductions.professionalTax > 0 && (
+                <div className="flex justify-between items-center">
+                  <span>Professional Tax</span>
+                  <span className="font-medium">₹{record.deductions.professionalTax.toLocaleString()}</span>
+                </div>
+              )}
               {record.deductions.tds > 0 && (
                 <div className="flex justify-between items-center">
-                  <span>TDS</span>
+                  <span>Tax Deducted at Source (TDS)</span>
                   <span className="font-medium">₹{record.deductions.tds.toLocaleString()}</span>
                 </div>
               )}

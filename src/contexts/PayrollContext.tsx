@@ -1,20 +1,36 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useEmployeeContext } from './EmployeeContext';
 import { useAttendanceContext } from './AttendanceContext';
+import { 
+  calculatePF, 
+  calculateESI, 
+  calculateProfessionalTax, 
+  calculateTDS, 
+  calculateGrossSalary,
+  calculateNetSalary
+} from '@/utils/indianPayrollCalculations';
 
 export interface PayrollRecord {
   id: number;
   employeeId: number;
   month: string;
   year: number;
-  basicSalary: number;
+  salaryBreakdown: {
+    basic: number;
+    hra: number;
+    da: number;
+    specialAllowance: number;
+    medicalAllowance: number;
+    conveyanceAllowance: number;
+    otherAllowances: number;
+  };
   overtimeHours: number;
   overtimePay: number;
   bonuses: number;
   deductions: {
     pf: number;
     esi: number;
+    professionalTax: number;
     tds: number;
     lateDeduction: number;
     absentDeduction: number;
@@ -23,6 +39,8 @@ export interface PayrollRecord {
   netSalary: number;
   status: 'Draft' | 'Processed' | 'Paid';
   processedDate?: string;
+  // Keep for backward compatibility
+  basicSalary: number;
 }
 
 interface PayrollContextType {
@@ -55,33 +73,43 @@ export const PayrollProvider = ({ children }: { children: ReactNode }) => {
     const lateDays = monthAttendance.filter(a => a.status === 'Late').length;
     const absentDays = workingDays - presentDays;
 
-    const basicSalary = employee.salary;
-    const dailySalary = basicSalary / workingDays;
+    const salaryStructure = employee.salaryStructure;
+    const grossSalary = calculateGrossSalary(salaryStructure);
+    const dailySalary = grossSalary / workingDays;
     
-    // Calculate deductions
-    const pf = Math.round(basicSalary * 0.12); // 12% PF
-    const esi = Math.round(basicSalary * 0.0175); // 1.75% ESI
-    const tds = basicSalary > 50000 ? Math.round(basicSalary * 0.1) : 0; // 10% TDS if salary > 50k
+    // Calculate Indian statutory deductions
+    const pf = calculatePF(salaryStructure);
+    const esi = calculateESI(salaryStructure).employee;
+    const professionalTax = calculateProfessionalTax(employee.state, grossSalary);
+    const tds = calculateTDS(salaryStructure.ctc); // Annual CTC for TDS calculation
     const lateDeduction = Math.round(lateDays * (dailySalary * 0.1)); // 10% of daily salary per late day
     const absentDeduction = Math.round(absentDays * dailySalary);
 
-    const totalDeductions = pf + esi + tds + lateDeduction + absentDeduction;
-    const grossSalary = basicSalary;
-    const netSalary = grossSalary - totalDeductions;
+    const deductions = { pf, esi, professionalTax, tds, lateDeduction, absentDeduction };
+    const netSalary = calculateNetSalary(salaryStructure, deductions);
 
     return {
       id: Date.now(),
       employeeId,
       month,
       year,
-      basicSalary,
+      salaryBreakdown: {
+        basic: salaryStructure.basic,
+        hra: salaryStructure.hra,
+        da: salaryStructure.da,
+        specialAllowance: salaryStructure.specialAllowance,
+        medicalAllowance: salaryStructure.medicalAllowance,
+        conveyanceAllowance: salaryStructure.conveyanceAllowance,
+        otherAllowances: salaryStructure.otherAllowances
+      },
       overtimeHours: 0,
       overtimePay: 0,
       bonuses: 0,
-      deductions: { pf, esi, tds, lateDeduction, absentDeduction },
+      deductions,
       grossSalary,
       netSalary,
-      status: 'Draft'
+      status: 'Draft',
+      basicSalary: salaryStructure.basic // For backward compatibility
     };
   };
 

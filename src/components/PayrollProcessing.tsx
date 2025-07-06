@@ -149,6 +149,7 @@ const PayrollProcessing = () => {
                 <TableRow>
                   <TableHead>Employee</TableHead>
                   <TableHead>Basic Salary</TableHead>
+                  <TableHead>Gross Salary</TableHead>
                   <TableHead>Total Deductions</TableHead>
                   <TableHead>Net Salary</TableHead>
                   {!previewMode && <TableHead>Status</TableHead>}
@@ -157,7 +158,7 @@ const PayrollProcessing = () => {
               <TableBody>
                 {dataToShow.map((record) => {
                   const employee = employees.find(e => e.id === record.employeeId);
-                  const totalDeductions = record.deductions.pf + record.deductions.esi + record.deductions.tds + record.deductions.lateDeduction + record.deductions.absentDeduction;
+                  const totalDeductions = record.deductions.pf + record.deductions.esi + record.deductions.professionalTax + record.deductions.tds + record.deductions.lateDeduction + record.deductions.absentDeduction;
                   
                   return (
                     <TableRow key={record.employeeId}>
@@ -172,7 +173,8 @@ const PayrollProcessing = () => {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>₹{record.basicSalary.toLocaleString()}</TableCell>
+                      <TableCell>₹{record.salaryBreakdown?.basic.toLocaleString() || record.basicSalary.toLocaleString()}</TableCell>
+                      <TableCell>₹{record.grossSalary.toLocaleString()}</TableCell>
                       <TableCell>₹{totalDeductions.toLocaleString()}</TableCell>
                       <TableCell className="font-semibold">₹{record.netSalary.toLocaleString()}</TableCell>
                       {!previewMode && (
