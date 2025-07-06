@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import Navbar from "@/components/Navbar";
+import UserForm from "@/components/UserForm";
 import { Building, Calculator, Shield, User, Save, Plus, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -78,6 +79,21 @@ const Settings = () => {
     }
   ]);
 
+  const [userFormState, setUserFormState] = useState<{
+    isOpen: boolean;
+    editingUser?: UserRole;
+  }>({
+    isOpen: false,
+    editingUser: undefined,
+  });
+
+  const locations = [
+    "Bandra West Cafe",
+    "Andheri East Cafe", 
+    "Powai Cafe",
+    "Colaba Cafe"
+  ];
+
   const handleSaveSettings = () => {
     toast({
       title: "Settings Saved",
@@ -93,24 +109,63 @@ const Settings = () => {
   };
 
   const handleAddUser = () => {
-    toast({
-      title: "Add User",
-      description: "User management functionality coming soon.",
+    setUserFormState({
+      isOpen: true,
+      editingUser: undefined,
     });
   };
 
   const handleEditUser = (userId: string) => {
-    toast({
-      title: "Edit User",
-      description: `Edit functionality for user ${userId} coming soon.`,
-    });
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      setUserFormState({
+        isOpen: true,
+        editingUser: user,
+      });
+    }
   };
 
   const handleDeleteUser = (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (user && user.role === 'Super Admin') {
+      toast({
+        title: "Cannot Delete",
+        description: "Super Admin users cannot be deleted.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setUsers(users.filter(user => user.id !== userId));
     toast({
       title: "User Deleted",
       description: "User has been removed from the system.",
+    });
+  };
+
+  const handleSaveUser = (userData: Omit<UserRole, 'id' | 'lastLogin'>) => {
+    if (userFormState.editingUser) {
+      // Update existing user
+      setUsers(users.map(user => 
+        user.id === userFormState.editingUser!.id 
+          ? { ...user, ...userData }
+          : user
+      ));
+    } else {
+      // Add new user
+      const newUser: UserRole = {
+        ...userData,
+        id: Date.now().toString(),
+        lastLogin: "Never",
+      };
+      setUsers([...users, newUser]);
+    }
+  };
+
+  const handleCloseUserForm = () => {
+    setUserFormState({
+      isOpen: false,
+      editingUser: undefined,
     });
   };
 
@@ -404,6 +459,7 @@ const Settings = () => {
                           variant="ghost" 
                           size="sm"
                           onClick={() => handleDeleteUser(user.id)}
+                          disabled={user.role === 'Super Admin'}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -415,6 +471,14 @@ const Settings = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <UserForm
+          user={userFormState.editingUser}
+          isOpen={userFormState.isOpen}
+          onClose={handleCloseUserForm}
+          onSave={handleSaveUser}
+          locations={locations}
+        />
       </div>
     </div>
   );
