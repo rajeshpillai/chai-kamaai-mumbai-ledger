@@ -1,11 +1,13 @@
 
-import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, BarChart3, Users } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import AttendanceDashboard from "@/components/AttendanceDashboard";
+import MarkAttendance from "@/components/MarkAttendance";
+import AttendanceHistory from "@/components/AttendanceHistory";
+import AttendanceReports from "@/components/AttendanceReports";
 
 const Attendance = () => {
   return (
@@ -57,24 +59,15 @@ const Attendance = () => {
           </TabsContent>
 
           <TabsContent value="mark">
-            <Card className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Mark Attendance</h3>
-              <p className="text-gray-600">Quick attendance marking functionality will be implemented here.</p>
-            </Card>
+            <MarkAttendance />
           </TabsContent>
 
           <TabsContent value="history">
-            <Card className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Attendance History</h3>
-              <p className="text-gray-600">Historical attendance records and calendar view will be shown here.</p>
-            </Card>
+            <AttendanceHistory />
           </TabsContent>
 
           <TabsContent value="reports">
-            <Card className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Attendance Reports</h3>
-              <p className="text-gray-600">Detailed attendance reports and analytics will be displayed here.</p>
-            </Card>
+            <AttendanceReports />
           </TabsContent>
         </Tabs>
       </div>
