@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Download, FileText, User } from "lucide-react";
-import { usePayrollContext } from "@/contexts/PayrollContext";
+import { usePayrollContext, PayrollRecord } from "@/contexts/PayrollContext";
 import { useEmployeeContext } from "@/contexts/EmployeeContext";
 
 const SalarySlips = () => {
-  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
+  const [selectedEmployee, setSelectedEmployee] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] = useState((new Date().getMonth() + 1).toString());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   
@@ -26,15 +26,15 @@ const SalarySlips = () => {
   const years = [2023, 2024, 2025].map(year => ({ value: year.toString(), label: year.toString() }));
 
   const filteredRecords = payrollRecords.filter(record => {
-    const matchesEmployee = !selectedEmployee || record.employeeId.toString() === selectedEmployee;
+    const matchesEmployee = selectedEmployee === "all" || record.employeeId.toString() === selectedEmployee;
     const matchesMonth = record.month === selectedMonth;
     const matchesYear = record.year.toString() === selectedYear;
     return matchesEmployee && matchesMonth && matchesYear;
   });
 
-  const SalarySlipCard = ({ record }: { record: any }) => {
+  const SalarySlipCard = ({ record }: { record: PayrollRecord }) => {
     const employee = employees.find(e => e.id === record.employeeId);
-    const totalDeductions = Object.values(record.deductions).reduce((sum: number, val: number) => sum + val, 0);
+    const totalDeductions = record.deductions.pf + record.deductions.esi + record.deductions.tds + record.deductions.lateDeduction + record.deductions.absentDeduction;
     
     return (
       <Card className="p-6 space-y-4">
@@ -58,21 +58,21 @@ const SalarySlips = () => {
           <div>
             <h4 className="font-semibold text-gray-700 mb-2">Employee Details</h4>
             <div className="space-y-1 text-sm">
-              <p><span className="font-medium">Name:</span> {employee?.name}</p>
-              <p><span className="font-medium">ID:</span> {employee?.id}</p>
-              <p><span className="font-medium">Role:</span> {employee?.role}</p>
-              <p><span className="font-medium">Department:</span> {employee?.department}</p>
-              <p><span className="font-medium">Location:</span> {employee?.location}</p>
+              <p><span className="font-medium">Name:</span> {employee?.name || 'N/A'}</p>
+              <p><span className="font-medium">ID:</span> {employee?.id || 'N/A'}</p>
+              <p><span className="font-medium">Role:</span> {employee?.role || 'N/A'}</p>
+              <p><span className="font-medium">Department:</span> {employee?.department || 'N/A'}</p>
+              <p><span className="font-medium">Location:</span> {employee?.location || 'N/A'}</p>
             </div>
           </div>
           
           <div>
             <h4 className="font-semibold text-gray-700 mb-2">Payment Details</h4>
             <div className="space-y-1 text-sm">
-              <p><span className="font-medium">Bank:</span> {employee?.bankName}</p>
-              <p><span className="font-medium">Account:</span> ****{employee?.bankAccountNumber.slice(-4)}</p>
-              <p><span className="font-medium">IFSC:</span> {employee?.ifscCode}</p>
-              <p><span className="font-medium">PAN:</span> {employee?.panNumber}</p>
+              <p><span className="font-medium">Bank:</span> {employee?.bankName || 'N/A'}</p>
+              <p><span className="font-medium">Account:</span> {employee?.bankAccountNumber ? `****${employee.bankAccountNumber.slice(-4)}` : 'N/A'}</p>
+              <p><span className="font-medium">IFSC:</span> {employee?.ifscCode || 'N/A'}</p>
+              <p><span className="font-medium">PAN:</span> {employee?.panNumber || 'N/A'}</p>
             </div>
           </div>
         </div>
@@ -176,7 +176,7 @@ const SalarySlips = () => {
                 <SelectValue placeholder="All employees" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All employees</SelectItem>
+                <SelectItem value="all">All employees</SelectItem>
                 {employees.map(employee => (
                   <SelectItem key={employee.id} value={employee.id.toString()}>
                     {employee.name} - {employee.role}
