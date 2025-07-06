@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,12 +27,33 @@ interface UserFormProps {
 const UserForm = ({ user, isOpen, onClose, onSave, locations }: UserFormProps) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    role: user?.role || 'HR Manager' as const,
-    location: user?.location || '',
-    status: user?.status || 'Active' as const,
+    name: '',
+    email: '',
+    role: 'HR Manager' as const,
+    location: '',
+    status: 'Active' as const,
   });
+
+  // Update form data when user prop changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        location: user.location || '',
+        status: user.status,
+      });
+    } else {
+      setFormData({
+        name: '',
+        email: '',
+        role: 'HR Manager',
+        location: '',
+        status: 'Active',
+      });
+    }
+  }, [user]);
 
   const handleSave = () => {
     if (!formData.name || !formData.email) {
