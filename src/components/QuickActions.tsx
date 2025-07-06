@@ -12,10 +12,12 @@ import {
   Plus,
   PlayCircle
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import AddEmployeeModal from "./AddEmployeeModal";
 
 const QuickActions = () => {
   const [addEmployeeOpen, setAddEmployeeOpen] = useState(false);
+  const navigate = useNavigate();
 
   const actions = [
     {
@@ -37,7 +39,7 @@ const QuickActions = () => {
       title: "Mark Attendance",
       description: "Update daily attendance records",
       color: "bg-orange-500 hover:bg-orange-600",
-      action: () => console.log("Mark Attendance clicked")
+      action: () => navigate("/attendance")
     },
     {
       icon: FileText,

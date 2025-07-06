@@ -11,9 +11,11 @@ import {
   Menu
 } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const navItems = [
     { icon: Users, label: "Employees", href: "/employees" },
@@ -28,7 +30,7 @@ const Navbar = () => {
       <div className="container mx-auto px-6">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate("/")}>
             <div className="bg-gradient-to-r from-orange-500 to-blue-600 p-2 rounded-lg">
               <Coffee className="h-6 w-6 text-white" />
             </div>
@@ -45,6 +47,7 @@ const Navbar = () => {
                 key={item.label}
                 variant="ghost"
                 className="flex items-center space-x-2 px-4 py-2 hover:bg-orange-50"
+                onClick={() => navigate(item.href)}
               >
                 <item.icon className="h-4 w-4" />
                 <span>{item.label}</span>
@@ -91,6 +94,10 @@ const Navbar = () => {
                   key={item.label}
                   variant="ghost"
                   className="w-full justify-start flex items-center space-x-2 px-4 py-2"
+                  onClick={() => {
+                    navigate(item.href);
+                    setIsMenuOpen(false);
+                  }}
                 >
                   <item.icon className="h-4 w-4" />
                   <span>{item.label}</span>

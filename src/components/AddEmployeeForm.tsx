@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -80,10 +79,30 @@ const AddEmployeeForm = ({ onSuccess }: AddEmployeeFormProps) => {
 
   const onSubmit = (data: EmployeeFormData) => {
     try {
-      addEmployee({
-        ...data,
+      // Ensure all required fields are present with proper typing
+      const employeeData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        role: data.role,
+        department: data.department,
+        location: data.location,
+        salary: data.salary,
+        joinDate: data.joinDate,
+        dateOfBirth: data.dateOfBirth,
+        employmentType: data.employmentType,
+        address: data.address,
+        panNumber: data.panNumber,
+        aadhaarNumber: data.aadhaarNumber,
+        pfAccount: data.pfAccount,
+        esiNumber: data.esiNumber,
+        bankAccountNumber: data.bankAccountNumber,
+        ifscCode: data.ifscCode,
+        bankName: data.bankName,
         status: "Active" as const,
-      });
+      };
+      
+      addEmployee(employeeData);
       toast.success("Employee added successfully!");
       onSuccess();
     } catch (error) {
