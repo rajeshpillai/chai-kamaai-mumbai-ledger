@@ -157,7 +157,7 @@ const PayrollProcessing = () => {
               <TableBody>
                 {dataToShow.map((record) => {
                   const employee = employees.find(e => e.id === record.employeeId);
-                  const totalDeductions = Object.values(record.deductions).reduce((sum, val) => sum + val, 0);
+                  const totalDeductions = record.deductions.pf + record.deductions.esi + record.deductions.tds + record.deductions.lateDeduction + record.deductions.absentDeduction;
                   
                   return (
                     <TableRow key={record.employeeId}>
