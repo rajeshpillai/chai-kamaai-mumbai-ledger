@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useEmployeeContext } from './EmployeeContext';
 import { useAttendanceContext } from './AttendanceContext';
+import { useShiftContext } from './ShiftContext';
+import { useLeaveContext } from './LeaveContext';
 import { 
   calculatePF, 
   calculateESI, 
@@ -9,6 +11,7 @@ import {
   calculateGrossSalary,
   calculateNetSalary
 } from '@/utils/indianPayrollCalculations';
+import { calculateMonthlyOvertime } from '@/utils/overtimeCalculations';
 
 export interface PayrollRecord {
   id: number;
@@ -26,7 +29,16 @@ export interface PayrollRecord {
   };
   overtimeHours: number;
   overtimePay: number;
+  nightDifferential: number;
+  shiftDifferential: number;
   bonuses: number;
+  leaveDetails: {
+    totalLeaveDays: number;
+    paidLeaveDays: number;
+    unpaidLeaveDays: number;
+    leaveDeduction: number;
+    leaveEncashment: number;
+  };
   deductions: {
     pf: number;
     esi: number;
@@ -34,6 +46,7 @@ export interface PayrollRecord {
     tds: number;
     lateDeduction: number;
     absentDeduction: number;
+    unpaidLeaveDeduction: number;
   };
   grossSalary: number;
   netSalary: number;
@@ -57,6 +70,8 @@ export const PayrollProvider = ({ children }: { children: ReactNode }) => {
   const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
   const { employees } = useEmployeeContext();
   const { attendanceRecords } = useAttendanceContext();
+  const { getEmployeeShift } = useShiftContext();
+  const { getApprovedLeaveForMonth, isOnLeave } = useLeaveContext();
 
   const calculatePayroll = (employeeId: number, month: string, year: number): PayrollRecord => {
     const employee = employees.find(emp => emp.id === employeeId);
@@ -71,11 +86,45 @@ export const PayrollProvider = ({ children }: { children: ReactNode }) => {
     const workingDays = 26; // Standard working days per month
     const presentDays = monthAttendance.filter(a => a.status === 'Present' || a.status === 'Late').length;
     const lateDays = monthAttendance.filter(a => a.status === 'Late').length;
-    const absentDays = workingDays - presentDays;
+    
+    // Leave calculations
+    const approvedLeaves = getApprovedLeaveForMonth(employeeId, parseInt(month), year);
+    const totalLeaveDays = approvedLeaves.reduce((sum, leave) => sum + leave.days, 0);
+    const paidLeaveDays = approvedLeaves.filter(leave => leave.isPaid).reduce((sum, leave) => sum + leave.days, 0);
+    const unpaidLeaveDays = totalLeaveDays - paidLeaveDays;
+    
+    const absentDays = workingDays - presentDays - totalLeaveDays;
 
     const salaryStructure = employee.salaryStructure;
     const grossSalary = calculateGrossSalary(salaryStructure);
     const dailySalary = grossSalary / workingDays;
+    const hourlyRate = dailySalary / 8; // 8 hours per day
+    
+    // Calculate overtime
+    const overtimeCalculation = calculateMonthlyOvertime(
+      employeeId, 
+      parseInt(month), 
+      year, 
+      attendanceRecords, 
+      hourlyRate
+    );
+    
+    // Calculate shift differentials
+    let nightDifferential = 0;
+    let shiftDifferential = 0;
+    
+    monthAttendance.forEach(record => {
+      if (record.shiftId) {
+        const shiftData = getEmployeeShift(employeeId, record.date);
+        if (shiftData?.shift.nightDifferential) {
+          nightDifferential += (record.regularHours + record.overtimeHours) * hourlyRate * (shiftData.shift.nightDifferential / 100);
+        }
+      }
+    });
+    
+    // Leave deductions and encashments
+    const unpaidLeaveDeduction = Math.round(unpaidLeaveDays * dailySalary);
+    const leaveEncashment = 0; // Would calculate based on unused leaves and policy
     
     // Calculate Indian statutory deductions
     const pf = calculatePF(salaryStructure);
@@ -85,8 +134,19 @@ export const PayrollProvider = ({ children }: { children: ReactNode }) => {
     const lateDeduction = Math.round(lateDays * (dailySalary * 0.1)); // 10% of daily salary per late day
     const absentDeduction = Math.round(absentDays * dailySalary);
 
-    const deductions = { pf, esi, professionalTax, tds, lateDeduction, absentDeduction };
-    const netSalary = calculateNetSalary(salaryStructure, deductions);
+    const deductions = { 
+      pf, 
+      esi, 
+      professionalTax, 
+      tds, 
+      lateDeduction, 
+      absentDeduction,
+      unpaidLeaveDeduction
+    };
+    
+    // Calculate final salary with overtime and leave adjustments
+    const adjustedGrossSalary = grossSalary + overtimeCalculation.totalOvertimePay + nightDifferential + shiftDifferential + leaveEncashment;
+    const netSalary = adjustedGrossSalary - Object.values(deductions).reduce((sum, val) => sum + val, 0);
 
     return {
       id: Date.now(),
@@ -102,12 +162,21 @@ export const PayrollProvider = ({ children }: { children: ReactNode }) => {
         conveyanceAllowance: salaryStructure.conveyanceAllowance,
         otherAllowances: salaryStructure.otherAllowances
       },
-      overtimeHours: 0,
-      overtimePay: 0,
+      overtimeHours: overtimeCalculation.totalOvertimeHours,
+      overtimePay: overtimeCalculation.totalOvertimePay,
+      nightDifferential: Math.round(nightDifferential),
+      shiftDifferential: Math.round(shiftDifferential),
       bonuses: 0,
+      leaveDetails: {
+        totalLeaveDays,
+        paidLeaveDays,
+        unpaidLeaveDays,
+        leaveDeduction: unpaidLeaveDeduction,
+        leaveEncashment
+      },
       deductions,
-      grossSalary,
-      netSalary,
+      grossSalary: Math.round(adjustedGrossSalary),
+      netSalary: Math.round(netSalary),
       status: 'Draft',
       basicSalary: salaryStructure.basic // For backward compatibility
     };

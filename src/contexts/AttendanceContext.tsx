@@ -7,17 +7,25 @@ export interface AttendanceRecord {
   date: string;
   checkIn: string | null;
   checkOut: string | null;
-  status: 'Present' | 'Absent' | 'Late' | 'Half Day';
+  status: 'Present' | 'Absent' | 'Late' | 'Half Day' | 'On Leave';
   location: string;
   notes?: string;
+  // Enhanced fields for overtime and shift tracking
+  shiftId?: number;
+  regularHours: number;
+  overtimeHours: number;
+  breakTime: number; // in minutes
+  totalWorkingHours: number;
 }
 
 interface AttendanceContextType {
   attendanceRecords: AttendanceRecord[];
-  markAttendance: (employeeId: number, type: 'checkin' | 'checkout', location: string) => void;
+  markAttendance: (employeeId: number, type: 'checkin' | 'checkout', location: string, shiftId?: number) => void;
   getAttendanceByDate: (date: string) => AttendanceRecord[];
   getEmployeeAttendance: (employeeId: number) => AttendanceRecord[];
   getTodayAttendance: () => AttendanceRecord[];
+  calculateWorkingHours: (checkIn: string, checkOut: string, breakTime?: number) => { regular: number; overtime: number; total: number };
+  updateAttendanceRecord: (id: number, updates: Partial<AttendanceRecord>) => void;
 }
 
 const AttendanceContext = createContext<AttendanceContextType | undefined>(undefined);
@@ -30,7 +38,12 @@ const initialRecords: AttendanceRecord[] = [
     checkIn: '09:00',
     checkOut: '18:00',
     status: 'Present',
-    location: 'Bandra West'
+    location: 'Bandra West',
+    shiftId: 1,
+    regularHours: 8,
+    overtimeHours: 1,
+    breakTime: 60,
+    totalWorkingHours: 9
   },
   {
     id: 2,
@@ -39,7 +52,12 @@ const initialRecords: AttendanceRecord[] = [
     checkIn: '09:15',
     checkOut: '18:30',
     status: 'Late',
-    location: 'Andheri East'
+    location: 'Andheri East',
+    shiftId: 1,
+    regularHours: 8,
+    overtimeHours: 0.75,
+    breakTime: 45,
+    totalWorkingHours: 8.75
   },
   {
     id: 3,
@@ -48,14 +66,43 @@ const initialRecords: AttendanceRecord[] = [
     checkIn: '09:00',
     checkOut: null,
     status: 'Present',
-    location: 'Powai'
+    location: 'Powai',
+    shiftId: 1,
+    regularHours: 0,
+    overtimeHours: 0,
+    breakTime: 0,
+    totalWorkingHours: 0
   }
 ];
 
 export const AttendanceProvider = ({ children }: { children: ReactNode }) => {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(initialRecords);
 
-  const markAttendance = (employeeId: number, type: 'checkin' | 'checkout', location: string) => {
+  const calculateWorkingHours = (checkIn: string, checkOut: string, breakTime: number = 60) => {
+    const checkInTime = new Date(`2000-01-01 ${checkIn}`);
+    const checkOutTime = new Date(`2000-01-01 ${checkOut}`);
+    
+    // Handle overnight shifts
+    if (checkOutTime < checkInTime) {
+      checkOutTime.setDate(checkOutTime.getDate() + 1);
+    }
+    
+    const totalMinutes = (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60);
+    const workingMinutes = totalMinutes - breakTime;
+    const totalHours = workingMinutes / 60;
+    
+    const standardHours = 8; // Standard working hours
+    const regularHours = Math.min(totalHours, standardHours);
+    const overtimeHours = Math.max(0, totalHours - standardHours);
+    
+    return {
+      regular: Number(regularHours.toFixed(2)),
+      overtime: Number(overtimeHours.toFixed(2)),
+      total: Number(totalHours.toFixed(2))
+    };
+  };
+
+  const markAttendance = (employeeId: number, type: 'checkin' | 'checkout', location: string, shiftId?: number) => {
     const today = new Date().toISOString().split('T')[0];
     const currentTime = new Date().toLocaleTimeString('en-US', { 
       hour12: false, 
@@ -69,8 +116,15 @@ export const AttendanceProvider = ({ children }: { children: ReactNode }) => {
       if (existingRecord) {
         return prev.map(record => {
           if (record.id === existingRecord.id) {
-            if (type === 'checkout') {
-              return { ...record, checkOut: currentTime };
+            if (type === 'checkout' && record.checkIn) {
+              const workingHours = calculateWorkingHours(record.checkIn, currentTime, record.breakTime);
+              return { 
+                ...record, 
+                checkOut: currentTime,
+                regularHours: workingHours.regular,
+                overtimeHours: workingHours.overtime,
+                totalWorkingHours: workingHours.total
+              };
             }
             return record;
           }
@@ -87,12 +141,23 @@ export const AttendanceProvider = ({ children }: { children: ReactNode }) => {
           checkIn: currentTime,
           checkOut: null,
           status: isLate ? 'Late' : 'Present',
-          location
+          location,
+          shiftId,
+          regularHours: 0,
+          overtimeHours: 0,
+          breakTime: 60, // Default 1 hour break
+          totalWorkingHours: 0
         }];
       }
       
       return prev;
     });
+  };
+
+  const updateAttendanceRecord = (id: number, updates: Partial<AttendanceRecord>) => {
+    setAttendanceRecords(prev => prev.map(record => 
+      record.id === id ? { ...record, ...updates } : record
+    ));
   };
 
   const getAttendanceByDate = (date: string) => {
@@ -114,7 +179,9 @@ export const AttendanceProvider = ({ children }: { children: ReactNode }) => {
       markAttendance,
       getAttendanceByDate,
       getEmployeeAttendance,
-      getTodayAttendance
+      getTodayAttendance,
+      calculateWorkingHours,
+      updateAttendanceRecord
     }}>
       {children}
     </AttendanceContext.Provider>
