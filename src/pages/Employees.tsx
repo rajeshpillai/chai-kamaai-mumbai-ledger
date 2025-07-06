@@ -18,12 +18,15 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import AddEmployeeModal from "@/components/AddEmployeeModal";
-import { useEmployeeContext } from "@/contexts/EmployeeContext";
+import EditEmployeeModal from "@/components/EditEmployeeModal";
+import { useEmployeeContext, Employee } from "@/contexts/EmployeeContext";
 
 const Employees = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [addEmployeeOpen, setAddEmployeeOpen] = useState(false);
-  const { employees } = useEmployeeContext();
+  const [editEmployeeOpen, setEditEmployeeOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const { employees, deleteEmployee } = useEmployeeContext();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -31,6 +34,17 @@ const Employees = () => {
       case "On Leave": return "bg-yellow-100 text-yellow-800";
       case "Inactive": return "bg-red-100 text-red-800";
       default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const handleEditEmployee = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setEditEmployeeOpen(true);
+  };
+
+  const handleDeleteEmployee = (employeeId: number) => {
+    if (window.confirm("Are you sure you want to delete this employee?")) {
+      deleteEmployee(employeeId);
     }
   };
 
@@ -129,10 +143,19 @@ const Employees = () => {
                     <p className="font-semibold text-lg text-gray-800">₹{employee.salary.toLocaleString()}</p>
                   </div>
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditEmployee(employee)}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-red-600 hover:text-red-700"
+                      onClick={() => handleDeleteEmployee(employee.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -168,6 +191,11 @@ const Employees = () => {
       </div>
 
       <AddEmployeeModal open={addEmployeeOpen} onOpenChange={setAddEmployeeOpen} />
+      <EditEmployeeModal 
+        open={editEmployeeOpen} 
+        onOpenChange={setEditEmployeeOpen}
+        employee={selectedEmployee}
+      />
     </div>
   );
 };
