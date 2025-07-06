@@ -6,6 +6,7 @@ import ShiftManagement from "@/components/ShiftManagement";
 import EmployeeShiftAssignment from "@/components/EmployeeShiftAssignment";
 import ShiftScheduling from "@/components/ShiftScheduling";
 import LeaveManagement from "@/components/LeaveManagement";
+import PayrollConfiguration from "@/components/PayrollConfiguration";
 import { Settings as SettingsIcon, Clock, Users, Calendar, FileText, Plane } from "lucide-react";
 
 const Settings = () => {
@@ -64,18 +65,12 @@ const Settings = () => {
           </TabsContent>
 
           <TabsContent value="payroll">
-            <Card className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Payroll Rules & Configuration</h3>
-              <p className="text-gray-600">Set up overtime rules, deductions, and payroll processing parameters.</p>
-              <div className="mt-4 p-4 bg-green-50 rounded-lg">
-                <p className="text-sm text-green-800">Payroll configuration component coming soon...</p>
-              </div>
-            </Card>
+            <PayrollConfiguration />
           </TabsContent>
 
           <TabsContent value="system">
             <Card className="p-6">
-              <h3 className="text-xl font-semibent mb-4">System Configuration</h3>
+              <h3 className="text-xl font-semibold mb-4">System Configuration</h3>
               <p className="text-gray-600">General system settings, notifications, and preferences.</p>
               <div className="mt-4 p-4 bg-purple-50 rounded-lg">
                 <p className="text-sm text-purple-800">System settings component coming soon...</p>
