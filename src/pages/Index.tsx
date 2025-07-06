@@ -5,8 +5,15 @@ import { Users, Calculator, Clock, FileText, MapPin, TrendingUp } from "lucide-r
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import QuickActions from "@/components/QuickActions";
+import { useEmployeeContext } from "@/contexts/EmployeeContext";
 
 const Index = () => {
+  const { employees } = useEmployeeContext();
+  
+  const totalSalary = employees.reduce((sum, emp) => sum + emp.salary, 0);
+  const activeEmployees = employees.filter(emp => emp.status === 'Active').length;
+  const uniqueLocations = new Set(employees.map(emp => emp.location)).size;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50">
       <Navbar />
@@ -26,21 +33,21 @@ const Index = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatsCard 
             title="Total Employees" 
-            value="156" 
+            value={employees.length.toString()} 
             icon={Users} 
             trend="+12%" 
             color="bg-blue-500" 
           />
           <StatsCard 
             title="Monthly Payroll" 
-            value="₹8,45,200" 
+            value={`₹${totalSalary.toLocaleString()}`} 
             icon={Calculator} 
             trend="+5%" 
             color="bg-green-500" 
           />
           <StatsCard 
             title="Active Locations" 
-            value="8" 
+            value={uniqueLocations.toString()} 
             icon={MapPin} 
             trend="+2" 
             color="bg-orange-500" 

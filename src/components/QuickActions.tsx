@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -11,15 +12,18 @@ import {
   Plus,
   PlayCircle
 } from "lucide-react";
+import AddEmployeeModal from "./AddEmployeeModal";
 
 const QuickActions = () => {
+  const [addEmployeeOpen, setAddEmployeeOpen] = useState(false);
+
   const actions = [
     {
       icon: UserPlus,
       title: "Add Employee",
       description: "Register new cafe staff member",
       color: "bg-blue-500 hover:bg-blue-600",
-      action: () => console.log("Add Employee clicked")
+      action: () => setAddEmployeeOpen(true)
     },
     {
       icon: Calculator,
@@ -59,44 +63,48 @@ const QuickActions = () => {
   ];
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">Quick Actions</h2>
-        <Button variant="outline" size="sm">
-          <Plus className="h-4 w-4 mr-1" />
-          Customize
-        </Button>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {actions.map((action, index) => (
-          <div key={index} className="group">
-            <Button
-              onClick={action.action}
-              className={`${action.color} w-full h-auto p-4 flex flex-col items-center text-white transition-all duration-200 group-hover:scale-105`}
-            >
-              <action.icon className="h-8 w-8 mb-2" />
-              <h3 className="font-semibold text-sm mb-1">{action.title}</h3>
-              <p className="text-xs opacity-90 text-center">{action.description}</p>
-            </Button>
-          </div>
-        ))}
-      </div>
-
-      {/* Quick Start Tutorial */}
-      <div className="mt-6 p-4 bg-gradient-to-r from-orange-100 to-blue-100 rounded-lg border border-orange-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold text-gray-800">New to CafePayroll?</h3>
-            <p className="text-sm text-gray-600">Get started with our step-by-step setup guide</p>
-          </div>
-          <Button variant="outline" size="sm" className="bg-white">
-            <PlayCircle className="h-4 w-4 mr-1" />
-            Start Tutorial
+    <>
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-800">Quick Actions</h2>
+          <Button variant="outline" size="sm">
+            <Plus className="h-4 w-4 mr-1" />
+            Customize
           </Button>
         </div>
-      </div>
-    </Card>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {actions.map((action, index) => (
+            <div key={index} className="group">
+              <Button
+                onClick={action.action}
+                className={`${action.color} w-full h-auto p-4 flex flex-col items-center text-white transition-all duration-200 group-hover:scale-105`}
+              >
+                <action.icon className="h-8 w-8 mb-2" />
+                <h3 className="font-semibold text-sm mb-1">{action.title}</h3>
+                <p className="text-xs opacity-90 text-center">{action.description}</p>
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        {/* Quick Start Tutorial */}
+        <div className="mt-6 p-4 bg-gradient-to-r from-orange-100 to-blue-100 rounded-lg border border-orange-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-gray-800">New to CafePayroll?</h3>
+              <p className="text-sm text-gray-600">Get started with our step-by-step setup guide</p>
+            </div>
+            <Button variant="outline" size="sm" className="bg-white">
+              <PlayCircle className="h-4 w-4 mr-1" />
+              Start Tutorial
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      <AddEmployeeModal open={addEmployeeOpen} onOpenChange={setAddEmployeeOpen} />
+    </>
   );
 };
 

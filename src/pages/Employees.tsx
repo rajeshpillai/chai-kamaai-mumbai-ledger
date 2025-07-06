@@ -17,60 +17,13 @@ import {
   Trash2
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import AddEmployeeModal from "@/components/AddEmployeeModal";
+import { useEmployeeContext } from "@/contexts/EmployeeContext";
 
 const Employees = () => {
   const [searchTerm, setSearchTerm] = useState("");
-
-  const employees = [
-    {
-      id: 1,
-      name: "Priya Sharma",
-      role: "Store Manager",
-      location: "Bandra West",
-      phone: "+91 98765 43210",
-      email: "priya.sharma@cafepay.com",
-      salary: "₹45,000",
-      joinDate: "2023-03-15",
-      status: "Active",
-      avatar: "PS"
-    },
-    {
-      id: 2,
-      name: "Rohit Patel",
-      role: "Barista",
-      location: "Andheri East",
-      phone: "+91 87654 32109",
-      email: "rohit.patel@cafepay.com",
-      salary: "₹25,000",
-      joinDate: "2023-06-20",
-      status: "Active",
-      avatar: "RP"
-    },
-    {
-      id: 3,
-      name: "Sneha Kulkarni",
-      role: "Cashier",
-      location: "Powai",
-      phone: "+91 76543 21098",
-      email: "sneha.k@cafepay.com",
-      salary: "₹22,000",
-      joinDate: "2023-08-10",
-      status: "Active",
-      avatar: "SK"
-    },
-    {
-      id: 4,
-      name: "Arjun Singh",
-      role: "Kitchen Staff",
-      location: "Bandra West",
-      phone: "+91 65432 10987",
-      email: "arjun.singh@cafepay.com",
-      salary: "₹20,000",
-      joinDate: "2023-09-05",
-      status: "On Leave",
-      avatar: "AS"
-    }
-  ];
+  const [addEmployeeOpen, setAddEmployeeOpen] = useState(false);
+  const { employees } = useEmployeeContext();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -98,7 +51,10 @@ const Employees = () => {
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Employee Management</h1>
             <p className="text-gray-600">Manage your cafe staff across all locations</p>
           </div>
-          <Button className="bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-600 hover:to-blue-700 mt-4 md:mt-0">
+          <Button 
+            className="bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-600 hover:to-blue-700 mt-4 md:mt-0"
+            onClick={() => setAddEmployeeOpen(true)}
+          >
             <UserPlus className="h-4 w-4 mr-2" />
             Add Employee
           </Button>
@@ -170,7 +126,7 @@ const Employees = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">Monthly Salary</p>
-                    <p className="font-semibold text-lg text-gray-800">{employee.salary}</p>
+                    <p className="font-semibold text-lg text-gray-800">₹{employee.salary.toLocaleString()}</p>
                   </div>
                   <div className="flex space-x-2">
                     <Button variant="outline" size="sm">
@@ -210,6 +166,8 @@ const Employees = () => {
           </Card>
         </div>
       </div>
+
+      <AddEmployeeModal open={addEmployeeOpen} onOpenChange={setAddEmployeeOpen} />
     </div>
   );
 };
