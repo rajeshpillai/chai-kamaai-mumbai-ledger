@@ -10,7 +10,9 @@ import {
   MapPin, 
   Download,
   Plus,
-  PlayCircle
+  PlayCircle,
+  Calendar,
+  Settings
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AddEmployeeModal from "./AddEmployeeModal";
@@ -34,7 +36,7 @@ const QuickActions = () => {
       title: "Run Payroll",
       description: "Process monthly salary calculations",
       color: "bg-green-500 hover:bg-green-600",
-      action: () => console.log("Run Payroll clicked")
+      action: () => navigate("/payroll")
     },
     {
       icon: Clock,
@@ -44,18 +46,32 @@ const QuickActions = () => {
       action: () => navigate("/attendance")
     },
     {
-      icon: FileText,
-      title: "Generate Report",
-      description: "Create compliance and payroll reports",
+      icon: Settings,
+      title: "Manage Shifts",
+      description: "Configure work shifts and schedules",
+      color: "bg-indigo-500 hover:bg-indigo-600",
+      action: () => navigate("/settings")
+    },
+    {
+      icon: Calendar,
+      title: "Leave Requests",
+      description: "View and manage leave applications",
       color: "bg-purple-500 hover:bg-purple-600",
-      action: () => console.log("Generate Report clicked")
+      action: () => navigate("/settings")
     },
     {
       icon: MapPin,
       title: "Add Location",
       description: "Register new cafe branch",
-      color: "bg-indigo-500 hover:bg-indigo-600",
+      color: "bg-teal-500 hover:bg-teal-600",
       action: () => setAddLocationOpen(true)
+    },
+    {
+      icon: FileText,
+      title: "Generate Report",
+      description: "Create compliance and payroll reports",
+      color: "bg-red-500 hover:bg-red-600",
+      action: () => navigate("/reports")
     },
     {
       icon: Download,
@@ -77,7 +93,7 @@ const QuickActions = () => {
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {actions.map((action, index) => (
             <div key={index} className="group">
               <Button
