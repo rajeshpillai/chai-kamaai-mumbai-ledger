@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -42,6 +43,7 @@ const employeeSchema = z.object({
   bankAccountNumber: z.string().min(10, "Bank account number must be at least 10 digits"),
   ifscCode: z.string().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC code format"),
   bankName: z.string().min(1, "Bank name is required"),
+  state: z.string().min(1, "State is required"),
 });
 
 type EmployeeFormData = z.infer<typeof employeeSchema>;
@@ -51,7 +53,7 @@ interface AddEmployeeFormProps {
 }
 
 const AddEmployeeForm = ({ onSuccess }: AddEmployeeFormProps) => {
-  const { addEmployee } = useEmployeeContext();
+  const { addEmployee, calculateSalaryStructure } = useEmployeeContext();
 
   const form = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
@@ -74,11 +76,16 @@ const AddEmployeeForm = ({ onSuccess }: AddEmployeeFormProps) => {
       bankAccountNumber: "",
       ifscCode: "",
       bankName: "",
+      state: "",
     },
   });
 
   const onSubmit = (data: EmployeeFormData) => {
     try {
+      // Calculate annual CTC from monthly salary
+      const annualCTC = data.salary * 12;
+      const salaryStructure = calculateSalaryStructure(annualCTC);
+      
       // Ensure all required fields are present with proper typing
       const employeeData = {
         name: data.name,
@@ -88,6 +95,7 @@ const AddEmployeeForm = ({ onSuccess }: AddEmployeeFormProps) => {
         department: data.department,
         location: data.location,
         salary: data.salary,
+        salaryStructure: salaryStructure,
         joinDate: data.joinDate,
         dateOfBirth: data.dateOfBirth,
         employmentType: data.employmentType,
@@ -99,6 +107,7 @@ const AddEmployeeForm = ({ onSuccess }: AddEmployeeFormProps) => {
         bankAccountNumber: data.bankAccountNumber,
         ifscCode: data.ifscCode,
         bankName: data.bankName,
+        state: data.state,
         status: "Active" as const,
       };
       
@@ -128,6 +137,12 @@ const AddEmployeeForm = ({ onSuccess }: AddEmployeeFormProps) => {
   const banks = [
     "State Bank of India", "HDFC Bank", "ICICI Bank", "Axis Bank", 
     "Kotak Mahindra Bank", "Yes Bank", "Bank of Baroda", "Canara Bank"
+  ];
+
+  const states = [
+    "Maharashtra", "Karnataka", "West Bengal", "Tamil Nadu", 
+    "Andhra Pradesh", "Telangana", "Gujarat", "Madhya Pradesh",
+    "Rajasthan", "Uttar Pradesh", "Bihar", "Odisha", "Kerala"
   ];
 
   return (
@@ -195,19 +210,44 @@ const AddEmployeeForm = ({ onSuccess }: AddEmployeeFormProps) => {
             />
           </div>
 
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address *</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Enter complete address" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address *</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Enter complete address" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>State *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {states.map((state) => (
+                        <SelectItem key={state} value={state}>{state}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
         {/* Job Information */}
