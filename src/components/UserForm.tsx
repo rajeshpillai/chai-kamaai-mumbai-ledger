@@ -26,12 +26,18 @@ interface UserFormProps {
 
 const UserForm = ({ user, isOpen, onClose, onSave, locations }: UserFormProps) => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    email: string;
+    role: 'Super Admin' | 'Admin' | 'HR Manager' | 'Location Manager';
+    location: string;
+    status: 'Active' | 'Inactive';
+  }>({
     name: '',
     email: '',
-    role: 'HR Manager' as const,
+    role: 'HR Manager',
     location: '',
-    status: 'Active' as const,
+    status: 'Active',
   });
 
   // Update form data when user prop changes
@@ -129,7 +135,7 @@ const UserForm = ({ user, isOpen, onClose, onSave, locations }: UserFormProps) =
           
           <div className="space-y-2">
             <Label>Role</Label>
-            <Select value={formData.role} onValueChange={(value: any) => setFormData({ ...formData, role: value, location: value !== 'Location Manager' ? '' : formData.location })}>
+            <Select value={formData.role} onValueChange={(value: 'Super Admin' | 'Admin' | 'HR Manager' | 'Location Manager') => setFormData({ ...formData, role: value, location: value !== 'Location Manager' ? '' : formData.location })}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -160,7 +166,7 @@ const UserForm = ({ user, isOpen, onClose, onSave, locations }: UserFormProps) =
           
           <div className="space-y-2">
             <Label>Status</Label>
-            <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
+            <Select value={formData.status} onValueChange={(value: 'Active' | 'Inactive') => setFormData({ ...formData, status: value })}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
