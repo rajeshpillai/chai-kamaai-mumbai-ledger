@@ -14,9 +14,11 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AddEmployeeModal from "./AddEmployeeModal";
+import AddLocationModal from "./AddLocationModal";
 
 const QuickActions = () => {
   const [addEmployeeOpen, setAddEmployeeOpen] = useState(false);
+  const [addLocationOpen, setAddLocationOpen] = useState(false);
   const navigate = useNavigate();
 
   const actions = [
@@ -53,7 +55,7 @@ const QuickActions = () => {
       title: "Add Location",
       description: "Register new cafe branch",
       color: "bg-indigo-500 hover:bg-indigo-600",
-      action: () => console.log("Add Location clicked")
+      action: () => setAddLocationOpen(true)
     },
     {
       icon: Download,
@@ -106,6 +108,7 @@ const QuickActions = () => {
       </Card>
 
       <AddEmployeeModal open={addEmployeeOpen} onOpenChange={setAddEmployeeOpen} />
+      <AddLocationModal open={addLocationOpen} onOpenChange={setAddLocationOpen} />
     </>
   );
 };
