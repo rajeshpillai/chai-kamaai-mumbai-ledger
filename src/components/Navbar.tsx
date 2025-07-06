@@ -8,7 +8,8 @@ import {
   Settings, 
   Bell,
   Coffee,
-  Menu
+  Menu,
+  MapPin
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +22,7 @@ const Navbar = () => {
     { icon: Users, label: "Employees", href: "/employees" },
     { icon: Calculator, label: "Payroll", href: "/payroll" },
     { icon: Clock, label: "Attendance", href: "/attendance" },
+    { icon: MapPin, label: "Locations", href: "/locations" },
     { icon: FileText, label: "Reports", href: "/reports" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];

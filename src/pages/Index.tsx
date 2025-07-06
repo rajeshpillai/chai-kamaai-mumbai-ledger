@@ -1,18 +1,22 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Calculator, Clock, FileText, MapPin, TrendingUp } from "lucide-react";
+import { Users, Calculator, Clock, FileText, MapPin, TrendingUp, Building } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import QuickActions from "@/components/QuickActions";
 import { useEmployeeContext } from "@/contexts/EmployeeContext";
+import { useLocationContext } from "@/contexts/LocationContext";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
   const { employees } = useEmployeeContext();
+  const { locations } = useLocationContext();
   
   const totalSalary = employees.reduce((sum, emp) => sum + emp.salary, 0);
   const activeEmployees = employees.filter(emp => emp.status === 'Active').length;
-  const uniqueLocations = new Set(employees.map(emp => emp.location)).size;
+  const activeLocations = locations.filter(loc => loc.status === 'Active').length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50">
@@ -47,7 +51,7 @@ const Index = () => {
           />
           <StatsCard 
             title="Active Locations" 
-            value={uniqueLocations.toString()} 
+            value={activeLocations.toString()} 
             icon={MapPin} 
             trend="+2" 
             color="bg-orange-500" 
@@ -64,8 +68,47 @@ const Index = () => {
         {/* Quick Actions */}
         <QuickActions />
 
-        {/* Recent Activity */}
+        {/* Locations Overview & Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Locations Overview</h3>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate("/locations")}
+              >
+                <Building className="h-4 w-4 mr-1" />
+                Manage All
+              </Button>
+            </div>
+            <div className="space-y-3">
+              {locations.slice(0, 3).map((location) => (
+                <div key={location.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium">{location.name}</p>
+                    <p className="text-sm text-gray-600">{location.city} • {location.status}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{location.workingHours.start} - {location.workingHours.end}</p>
+                    <p className="text-xs text-gray-600">Working Hours</p>
+                  </div>
+                </div>
+              ))}
+              {locations.length > 3 && (
+                <div className="text-center pt-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => navigate("/locations")}
+                  >
+                    View all {locations.length} locations
+                  </Button>
+                </div>
+              )}
+            </div>
+          </Card>
+
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Recent Payroll Activities</h3>
             <div className="space-y-3">
@@ -92,34 +135,35 @@ const Index = () => {
               </div>
             </div>
           </Card>
-
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Upcoming Tasks</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
-                <div>
-                  <p className="font-medium">TDS Return Filing</p>
-                  <p className="text-sm text-gray-600">Due: 7th January 2025</p>
-                </div>
-                <Clock className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div className="flex items-center justify-between p-3 bg-blue-50 border-l-4 border-blue-400 rounded-lg">
-                <div>
-                  <p className="font-medium">January Salary Processing</p>
-                  <p className="text-sm text-gray-600">All locations</p>
-                </div>
-                <Calculator className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="flex items-center justify-between p-3 bg-green-50 border-l-4 border-green-400 rounded-lg">
-                <div>
-                  <p className="font-medium">Annual Appraisal Cycle</p>
-                  <p className="text-sm text-gray-600">Performance review season</p>
-                </div>
-                <TrendingUp className="h-5 w-5 text-green-600" />
-              </div>
-            </div>
-          </Card>
         </div>
+
+        {/* Upcoming Tasks */}
+        <Card className="p-6 mt-6">
+          <h3 className="text-lg font-semibold mb-4">Upcoming Tasks</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center justify-between p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
+              <div>
+                <p className="font-medium">TDS Return Filing</p>
+                <p className="text-sm text-gray-600">Due: 7th January 2025</p>
+              </div>
+              <Clock className="h-5 w-5 text-yellow-600" />
+            </div>
+            <div className="flex items-center justify-between p-3 bg-blue-50 border-l-4 border-blue-400 rounded-lg">
+              <div>
+                <p className="font-medium">January Salary Processing</p>
+                <p className="text-sm text-gray-600">All locations</p>
+              </div>
+              <Calculator className="h-5 w-5 text-blue-600" />
+            </div>
+            <div className="flex items-center justify-between p-3 bg-green-50 border-l-4 border-green-400 rounded-lg">
+              <div>
+                <p className="font-medium">Annual Appraisal Cycle</p>
+                <p className="text-sm text-gray-600">Performance review season</p>
+              </div>
+              <TrendingUp className="h-5 w-5 text-green-600" />
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   );
