@@ -5,7 +5,8 @@ import Navbar from "@/components/Navbar";
 import ShiftManagement from "@/components/ShiftManagement";
 import EmployeeShiftAssignment from "@/components/EmployeeShiftAssignment";
 import ShiftScheduling from "@/components/ShiftScheduling";
-import { Settings as SettingsIcon, Clock, Users, Calendar, FileText } from "lucide-react";
+import LeaveManagement from "@/components/LeaveManagement";
+import { Settings as SettingsIcon, Clock, Users, Calendar, FileText, Plane } from "lucide-react";
 
 const Settings = () => {
   return (
@@ -15,11 +16,11 @@ const Settings = () => {
       <div className="container mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-4">Settings & Administration</h1>
-          <p className="text-gray-600">Manage system settings, shifts, and administrative configurations</p>
+          <p className="text-gray-600">Manage system settings, shifts, leave management, and administrative configurations</p>
         </div>
 
         <Tabs defaultValue="shifts" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="shifts" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
               Shift Setup
@@ -31,6 +32,10 @@ const Settings = () => {
             <TabsTrigger value="scheduling" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Shift Scheduling
+            </TabsTrigger>
+            <TabsTrigger value="leave" className="flex items-center gap-2">
+              <Plane className="h-4 w-4" />
+              Leave Management
             </TabsTrigger>
             <TabsTrigger value="payroll" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -52,6 +57,10 @@ const Settings = () => {
 
           <TabsContent value="scheduling">
             <ShiftScheduling />
+          </TabsContent>
+
+          <TabsContent value="leave">
+            <LeaveManagement />
           </TabsContent>
 
           <TabsContent value="payroll">
