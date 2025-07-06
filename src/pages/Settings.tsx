@@ -3,6 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import ShiftManagement from "@/components/ShiftManagement";
+import EmployeeShiftAssignment from "@/components/EmployeeShiftAssignment";
+import ShiftScheduling from "@/components/ShiftScheduling";
 import { Settings as SettingsIcon, Clock, Users, Calendar, FileText } from "lucide-react";
 
 const Settings = () => {
@@ -17,14 +19,18 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue="shifts" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="shifts" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Shift Management
+              Shift Setup
             </TabsTrigger>
-            <TabsTrigger value="leave" className="flex items-center gap-2">
+            <TabsTrigger value="assignments" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Shift Assignments
+            </TabsTrigger>
+            <TabsTrigger value="scheduling" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Leave Settings
+              Shift Scheduling
             </TabsTrigger>
             <TabsTrigger value="payroll" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -40,14 +46,12 @@ const Settings = () => {
             <ShiftManagement />
           </TabsContent>
 
-          <TabsContent value="leave">
-            <Card className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Leave Management Settings</h3>
-              <p className="text-gray-600">Configure leave policies, balances, and approval workflows.</p>
-              <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-800">Leave management component coming soon...</p>
-              </div>
-            </Card>
+          <TabsContent value="assignments">
+            <EmployeeShiftAssignment />
+          </TabsContent>
+
+          <TabsContent value="scheduling">
+            <ShiftScheduling />
           </TabsContent>
 
           <TabsContent value="payroll">
@@ -62,7 +66,7 @@ const Settings = () => {
 
           <TabsContent value="system">
             <Card className="p-6">
-              <h3 className="text-xl font-semibold mb-4">System Configuration</h3>
+              <h3 className="text-xl font-semibent mb-4">System Configuration</h3>
               <p className="text-gray-600">General system settings, notifications, and preferences.</p>
               <div className="mt-4 p-4 bg-purple-50 rounded-lg">
                 <p className="text-sm text-purple-800">System settings component coming soon...</p>

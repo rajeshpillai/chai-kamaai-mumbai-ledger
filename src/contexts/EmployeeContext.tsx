@@ -35,6 +35,7 @@ export interface Employee {
   bankName: string;
   avatar: string;
   state: string; // For Professional Tax calculation
+  defaultShiftId?: number; // New field for permanent shift assignment
 }
 
 interface EmployeeContextType {
@@ -43,6 +44,7 @@ interface EmployeeContextType {
   updateEmployee: (id: number, employee: Partial<Employee>) => void;
   deleteEmployee: (id: number) => void;
   calculateSalaryStructure: (ctc: number) => SalaryStructure;
+  assignDefaultShift: (employeeId: number, shiftId: number) => void;
 }
 
 const EmployeeContext = createContext<EmployeeContextType | undefined>(undefined);
@@ -92,7 +94,8 @@ const initialEmployees: Employee[] = [
     ifscCode: "HDFC0001234",
     bankName: "HDFC Bank",
     avatar: "PS",
-    state: "Maharashtra"
+    state: "Maharashtra",
+    defaultShiftId: 1
   },
   {
     id: 2,
@@ -117,7 +120,8 @@ const initialEmployees: Employee[] = [
     ifscCode: "ICICI0005678",
     bankName: "ICICI Bank",
     avatar: "RP",
-    state: "Maharashtra"
+    state: "Maharashtra",
+    defaultShiftId: 1
   },
   {
     id: 3,
@@ -142,7 +146,8 @@ const initialEmployees: Employee[] = [
     ifscCode: "SBI0009012",
     bankName: "State Bank of India",
     avatar: "SK",
-    state: "Maharashtra"
+    state: "Maharashtra",
+    defaultShiftId: 2
   },
   {
     id: 4,
@@ -167,7 +172,8 @@ const initialEmployees: Employee[] = [
     ifscCode: "AXIS0003456",
     bankName: "Axis Bank",
     avatar: "AS",
-    state: "Maharashtra"
+    state: "Maharashtra",
+    defaultShiftId: 1
   },
   {
     id: 5,
@@ -192,7 +198,8 @@ const initialEmployees: Employee[] = [
     ifscCode: "KOTAK0007890",
     bankName: "Kotak Mahindra Bank",
     avatar: "MR",
-    state: "Maharashtra"
+    state: "Maharashtra",
+    defaultShiftId: 3
   }
 ];
 
@@ -226,13 +233,18 @@ export const EmployeeProvider = ({ children }: { children: ReactNode }) => {
     setEmployees(prev => prev.filter(emp => emp.id !== id));
   };
 
+  const assignDefaultShift = (employeeId: number, shiftId: number) => {
+    updateEmployee(employeeId, { defaultShiftId: shiftId });
+  };
+
   return (
     <EmployeeContext.Provider value={{
       employees,
       addEmployee,
       updateEmployee,
       deleteEmployee,
-      calculateSalaryStructure
+      calculateSalaryStructure,
+      assignDefaultShift
     }}>
       {children}
     </EmployeeContext.Provider>
