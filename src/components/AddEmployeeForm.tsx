@@ -21,8 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEmployeeContext } from "@/contexts/EmployeeContext";
+import { useEmployeeContext, SalaryStructure } from "@/contexts/EmployeeContext";
 import { toast } from "sonner";
+import SalaryStructureForm from "./SalaryStructureForm";
+import { useState } from "react";
 
 const employeeSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -53,7 +55,8 @@ interface AddEmployeeFormProps {
 }
 
 const AddEmployeeForm = ({ onSuccess }: AddEmployeeFormProps) => {
-  const { addEmployee, calculateSalaryStructure } = useEmployeeContext();
+  const { addEmployee } = useEmployeeContext();
+  const [salaryStructure, setSalaryStructure] = useState<SalaryStructure | null>(null);
 
   const form = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
@@ -80,13 +83,15 @@ const AddEmployeeForm = ({ onSuccess }: AddEmployeeFormProps) => {
     },
   });
 
+  const watchedSalary = form.watch("salary");
+
   const onSubmit = (data: EmployeeFormData) => {
     try {
-      // Calculate annual CTC from monthly salary
-      const annualCTC = data.salary * 12;
-      const salaryStructure = calculateSalaryStructure(annualCTC);
-      
-      // Ensure all required fields are present with proper typing
+      if (!salaryStructure) {
+        toast.error("Please configure salary structure first.");
+        return;
+      }
+
       const employeeData = {
         name: data.name,
         email: data.email,
@@ -381,6 +386,14 @@ const AddEmployeeForm = ({ onSuccess }: AddEmployeeFormProps) => {
             />
           </div>
         </div>
+
+        {/* Salary Structure */}
+        {watchedSalary > 0 && (
+          <SalaryStructureForm
+            totalSalary={watchedSalary}
+            onStructureChange={setSalaryStructure}
+          />
+        )}
 
         {/* Tax & Compliance Information */}
         <div className="space-y-4">

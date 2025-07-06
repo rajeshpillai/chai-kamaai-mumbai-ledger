@@ -20,8 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEmployeeContext, Employee } from "@/contexts/EmployeeContext";
+import { useEmployeeContext, Employee, SalaryStructure } from "@/contexts/EmployeeContext";
 import { toast } from "sonner";
+import SalaryStructureForm from "./SalaryStructureForm";
+import { useState } from "react";
 
 const employeeSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -54,7 +56,8 @@ interface EditEmployeeFormProps {
 }
 
 const EditEmployeeForm = ({ employee, onSuccess }: EditEmployeeFormProps) => {
-  const { updateEmployee, calculateSalaryStructure } = useEmployeeContext();
+  const { updateEmployee } = useEmployeeContext();
+  const [salaryStructure, setSalaryStructure] = useState<SalaryStructure>(employee.salaryStructure);
 
   const form = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
@@ -82,12 +85,10 @@ const EditEmployeeForm = ({ employee, onSuccess }: EditEmployeeFormProps) => {
     },
   });
 
+  const watchedSalary = form.watch("salary");
+
   const onSubmit = (data: EmployeeFormData) => {
     try {
-      // Calculate annual CTC from monthly salary
-      const annualCTC = data.salary * 12;
-      const salaryStructure = calculateSalaryStructure(annualCTC);
-      
       const updatedData = {
         ...data,
         salaryStructure: salaryStructure,
@@ -386,6 +387,13 @@ const EditEmployeeForm = ({ employee, onSuccess }: EditEmployeeFormProps) => {
             />
           </div>
         </div>
+
+        {/* Salary Structure */}
+        <SalaryStructureForm
+          initialStructure={employee.salaryStructure}
+          totalSalary={watchedSalary}
+          onStructureChange={setSalaryStructure}
+        />
 
         {/* Tax & Compliance Information */}
         <div className="space-y-4">
