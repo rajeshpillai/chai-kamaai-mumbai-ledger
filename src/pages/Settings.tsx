@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -8,8 +7,18 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import Navbar from "@/components/Navbar";
-import { Building, Calculator, Shield, User, Save } from "lucide-react";
+import { Building, Calculator, Shield, User, Save, Plus, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+interface UserRole {
+  id: string;
+  name: string;
+  email: string;
+  role: 'Super Admin' | 'Admin' | 'HR Manager' | 'Location Manager';
+  location?: string;
+  status: 'Active' | 'Inactive';
+  lastLogin: string;
+}
 
 const Settings = () => {
   const { toast } = useToast();
@@ -30,10 +39,78 @@ const Settings = () => {
     autoCalculate: true
   });
 
+  const [complianceSettings, setComplianceSettings] = useState({
+    pfRate: 12,
+    esiEmployeeRate: 0.75,
+    esiEmployerRate: 3.25,
+    professionalTaxMaharashtra: 200,
+    tdsThreshold: 300000,
+    autoTaxCalculation: true,
+    complianceAlerts: true,
+    monthlyReportGeneration: true
+  });
+
+  const [users, setUsers] = useState<UserRole[]>([
+    {
+      id: "1",
+      name: "Admin User",
+      email: "admin@cafepayroll.com",
+      role: "Super Admin",
+      status: "Active",
+      lastLogin: "2024-01-06"
+    },
+    {
+      id: "2",
+      name: "HR Manager",
+      email: "hr@cafepayroll.com",
+      role: "HR Manager",
+      status: "Active",
+      lastLogin: "2024-01-05"
+    },
+    {
+      id: "3",
+      name: "Bandra Manager",
+      email: "bandra@cafepayroll.com",
+      role: "Location Manager",
+      location: "Bandra West Cafe",
+      status: "Active",
+      lastLogin: "2024-01-04"
+    }
+  ]);
+
   const handleSaveSettings = () => {
     toast({
       title: "Settings Saved",
       description: "Your settings have been updated successfully.",
+    });
+  };
+
+  const handleSaveCompliance = () => {
+    toast({
+      title: "Compliance Settings Saved",
+      description: "Tax rates and compliance settings have been updated.",
+    });
+  };
+
+  const handleAddUser = () => {
+    toast({
+      title: "Add User",
+      description: "User management functionality coming soon.",
+    });
+  };
+
+  const handleEditUser = (userId: string) => {
+    toast({
+      title: "Edit User",
+      description: `Edit functionality for user ${userId} coming soon.`,
+    });
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    setUsers(users.filter(user => user.id !== userId));
+    toast({
+      title: "User Deleted",
+      description: "User has been removed from the system.",
     });
   };
 
@@ -187,15 +264,154 @@ const Settings = () => {
 
           <TabsContent value="compliance">
             <Card className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Compliance Settings</h3>
-              <p className="text-gray-600">Tax rates, professional tax, and compliance configurations coming soon...</p>
+              <h3 className="text-xl font-semibold mb-6">Compliance Settings</h3>
+              
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>PF Rate (%)</Label>
+                    <Input 
+                      type="number"
+                      value={complianceSettings.pfRate}
+                      onChange={(e) => setComplianceSettings({...complianceSettings, pfRate: parseFloat(e.target.value)})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ESI Employee Rate (%)</Label>
+                    <Input 
+                      type="number"
+                      step="0.01"
+                      value={complianceSettings.esiEmployeeRate}
+                      onChange={(e) => setComplianceSettings({...complianceSettings, esiEmployeeRate: parseFloat(e.target.value)})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ESI Employer Rate (%)</Label>
+                    <Input 
+                      type="number"
+                      step="0.01"
+                      value={complianceSettings.esiEmployerRate}
+                      onChange={(e) => setComplianceSettings({...complianceSettings, esiEmployerRate: parseFloat(e.target.value)})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Professional Tax (Maharashtra)</Label>
+                    <Input 
+                      type="number"
+                      value={complianceSettings.professionalTaxMaharashtra}
+                      onChange={(e) => setComplianceSettings({...complianceSettings, professionalTaxMaharashtra: parseInt(e.target.value)})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>TDS Threshold (Annual)</Label>
+                    <Input 
+                      type="number"
+                      value={complianceSettings.tdsThreshold}
+                      onChange={(e) => setComplianceSettings({...complianceSettings, tdsThreshold: parseInt(e.target.value)})}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Auto Tax Calculation</Label>
+                      <p className="text-sm text-gray-600">Automatically calculate taxes based on current rates</p>
+                    </div>
+                    <Switch 
+                      checked={complianceSettings.autoTaxCalculation}
+                      onCheckedChange={(checked) => setComplianceSettings({...complianceSettings, autoTaxCalculation: checked})}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Compliance Alerts</Label>
+                      <p className="text-sm text-gray-600">Receive notifications for compliance deadlines</p>
+                    </div>
+                    <Switch 
+                      checked={complianceSettings.complianceAlerts}
+                      onCheckedChange={(checked) => setComplianceSettings({...complianceSettings, complianceAlerts: checked})}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Monthly Report Generation</Label>
+                      <p className="text-sm text-gray-600">Auto-generate monthly compliance reports</p>
+                    </div>
+                    <Switch 
+                      checked={complianceSettings.monthlyReportGeneration}
+                      onCheckedChange={(checked) => setComplianceSettings({...complianceSettings, monthlyReportGeneration: checked})}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Button onClick={handleSaveCompliance} className="mt-6">
+                <Save className="h-4 w-4 mr-2" />
+                Save Compliance Settings
+              </Button>
             </Card>
           </TabsContent>
 
           <TabsContent value="users">
             <Card className="p-6">
-              <h3 className="text-xl font-semibold mb-4">User Management</h3>
-              <p className="text-gray-600">User roles and access control settings coming soon...</p>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold">User Management</h3>
+                <Button onClick={handleAddUser}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add User
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                {users.map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-gradient-to-r from-orange-400 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                          {user.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-medium">{user.name}</p>
+                          <p className="text-sm text-gray-600">{user.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{user.role}</p>
+                        {user.location && <p className="text-xs text-gray-600">{user.location}</p>}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          user.status === 'Active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {user.status}
+                        </span>
+                        <p className="text-xs text-gray-500">Last: {user.lastLogin}</p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleEditUser(user.id)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDeleteUser(user.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </Card>
           </TabsContent>
         </Tabs>
