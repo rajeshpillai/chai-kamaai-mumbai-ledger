@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,6 +50,23 @@ const PayrollProcessing = () => {
       case "Paid": return "bg-blue-100 text-blue-800";
       default: return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const calculateTotalDeductions = (deductions: any) => {
+    if (!deductions) return 0;
+    
+    const safeNumber = (value: any): number => {
+      const num = Number(value);
+      return isNaN(num) ? 0 : num;
+    };
+
+    return safeNumber(deductions.pf) + 
+           safeNumber(deductions.esi) + 
+           safeNumber(deductions.professionalTax) + 
+           safeNumber(deductions.tds) + 
+           safeNumber(deductions.lateDeduction) + 
+           safeNumber(deductions.absentDeduction) + 
+           safeNumber(deductions.unpaidLeaveDeduction || 0);
   };
 
   const dataToShow = previewMode ? previewData : existingPayroll.map(p => ({
@@ -158,7 +174,7 @@ const PayrollProcessing = () => {
               <TableBody>
                 {dataToShow.map((record) => {
                   const employee = employees.find(e => e.id === record.employeeId);
-                  const totalDeductions = record.deductions.pf + record.deductions.esi + record.deductions.professionalTax + record.deductions.tds + record.deductions.lateDeduction + record.deductions.absentDeduction;
+                  const totalDeductions = calculateTotalDeductions(record.deductions);
                   
                   return (
                     <TableRow key={record.employeeId}>
@@ -173,10 +189,10 @@ const PayrollProcessing = () => {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>₹{record.salaryBreakdown?.basic.toLocaleString() || record.basicSalary.toLocaleString()}</TableCell>
-                      <TableCell>₹{record.grossSalary.toLocaleString()}</TableCell>
+                      <TableCell>₹{(record.salaryBreakdown?.basic || record.basicSalary || 0).toLocaleString()}</TableCell>
+                      <TableCell>₹{(record.grossSalary || 0).toLocaleString()}</TableCell>
                       <TableCell>₹{totalDeductions.toLocaleString()}</TableCell>
-                      <TableCell className="font-semibold">₹{record.netSalary.toLocaleString()}</TableCell>
+                      <TableCell className="font-semibold">₹{(record.netSalary || 0).toLocaleString()}</TableCell>
                       {!previewMode && (
                         <TableCell>
                           <Badge className={getStatusColor(record.status)}>

@@ -1,4 +1,3 @@
-
 import { SalaryStructure } from '@/contexts/EmployeeContext';
 
 export interface TaxSlab {
@@ -28,54 +27,81 @@ export const PROFESSIONAL_TAX_RATES: { [state: string]: number } = {
   'Default': 200
 };
 
+// Helper function to ensure valid number
+const safeNumber = (value: any): number => {
+  const num = Number(value);
+  return isNaN(num) ? 0 : num;
+};
+
 export const calculatePF = (salaryStructure: SalaryStructure): number => {
+  if (!salaryStructure) return 0;
+  
   // PF is calculated on Basic + DA only, capped at ₹15,000
-  const pfEligibleSalary = Math.min((salaryStructure.basic + salaryStructure.da), 15000);
-  return Math.round(pfEligibleSalary * 0.12);
+  const basic = safeNumber(salaryStructure.basic);
+  const da = safeNumber(salaryStructure.da);
+  const pfEligibleSalary = Math.min((basic + da), 15000);
+  
+  return Math.round(safeNumber(pfEligibleSalary * 0.12));
 };
 
 export const calculateESI = (salaryStructure: SalaryStructure): { employee: number; employer: number } => {
-  const grossSalary = salaryStructure.basic + salaryStructure.hra + salaryStructure.da + 
-                     salaryStructure.specialAllowance + salaryStructure.medicalAllowance + 
-                     salaryStructure.conveyanceAllowance + salaryStructure.otherAllowances;
+  if (!salaryStructure) return { employee: 0, employer: 0 };
+  
+  const grossSalary = safeNumber(salaryStructure.basic) + 
+                     safeNumber(salaryStructure.hra) + 
+                     safeNumber(salaryStructure.da) + 
+                     safeNumber(salaryStructure.specialAllowance) + 
+                     safeNumber(salaryStructure.medicalAllowance) + 
+                     safeNumber(salaryStructure.conveyanceAllowance) + 
+                     safeNumber(salaryStructure.otherAllowances);
   
   // ESI is applicable only if gross salary is ≤ ₹21,000
   if (grossSalary > 21000) {
     return { employee: 0, employer: 0 };
   }
   
-  const employeeESI = Math.round(grossSalary * 0.0075); // 0.75%
-  const employerESI = Math.round(grossSalary * 0.0325); // 3.25%
+  const employeeESI = Math.round(safeNumber(grossSalary * 0.0075)); // 0.75%
+  const employerESI = Math.round(safeNumber(grossSalary * 0.0325)); // 3.25%
   
   return { employee: employeeESI, employer: employerESI };
 };
 
 export const calculateProfessionalTax = (state: string, grossSalary: number): number => {
-  const rate = PROFESSIONAL_TAX_RATES[state] || PROFESSIONAL_TAX_RATES['Default'];
-  return grossSalary > 15000 ? rate : 0;
+  const validState = state || 'Default';
+  const validGrossSalary = safeNumber(grossSalary);
+  const rate = PROFESSIONAL_TAX_RATES[validState] || PROFESSIONAL_TAX_RATES['Default'];
+  return validGrossSalary > 15000 ? safeNumber(rate) : 0;
 };
 
 export const calculateTDS = (annualIncome: number, investments?: number): number => {
-  const taxableIncome = annualIncome - (investments || 0);
+  const validAnnualIncome = safeNumber(annualIncome);
+  const validInvestments = safeNumber(investments);
+  const taxableIncome = validAnnualIncome - validInvestments;
   let tax = 0;
   
   for (const slab of TAX_SLABS_2024) {
     if (taxableIncome > slab.min) {
       const taxableAmount = Math.min(taxableIncome, slab.max) - slab.min;
-      tax += taxableAmount * slab.rate;
+      tax += safeNumber(taxableAmount * slab.rate);
     }
   }
   
   // Add 4% Health and Education Cess
-  tax = tax * 1.04;
+  tax = safeNumber(tax * 1.04);
   
-  return Math.round(tax / 12); // Monthly TDS
+  return Math.round(safeNumber(tax / 12)); // Monthly TDS
 };
 
 export const calculateGrossSalary = (salaryStructure: SalaryStructure): number => {
-  return salaryStructure.basic + salaryStructure.hra + salaryStructure.da + 
-         salaryStructure.specialAllowance + salaryStructure.medicalAllowance + 
-         salaryStructure.conveyanceAllowance + salaryStructure.otherAllowances;
+  if (!salaryStructure) return 0;
+  
+  return safeNumber(salaryStructure.basic) + 
+         safeNumber(salaryStructure.hra) + 
+         safeNumber(salaryStructure.da) + 
+         safeNumber(salaryStructure.specialAllowance) + 
+         safeNumber(salaryStructure.medicalAllowance) + 
+         safeNumber(salaryStructure.conveyanceAllowance) + 
+         safeNumber(salaryStructure.otherAllowances);
 };
 
 export const calculateNetSalary = (
@@ -89,7 +115,9 @@ export const calculateNetSalary = (
     absentDeduction: number;
   }
 ): number => {
+  if (!salaryStructure || !deductions) return 0;
+  
   const grossSalary = calculateGrossSalary(salaryStructure);
-  const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
-  return grossSalary - totalDeductions;
+  const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + safeNumber(val), 0);
+  return safeNumber(grossSalary - totalDeductions);
 };

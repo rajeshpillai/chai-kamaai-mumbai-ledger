@@ -1,4 +1,3 @@
-
 import { ShiftType } from '@/contexts/ShiftContext';
 
 export interface OvertimeRules {
@@ -31,6 +30,12 @@ export interface OvertimeCalculationInput {
   isHoliday?: boolean;
 }
 
+// Helper function to ensure valid number
+const safeNumber = (value: any): number => {
+  const num = Number(value);
+  return isNaN(num) ? 0 : num;
+};
+
 export const calculateOvertimePay = (input: OvertimeCalculationInput): {
   regularPay: number;
   overtimePay: number;
@@ -41,8 +46,14 @@ export const calculateOvertimePay = (input: OvertimeCalculationInput): {
   const { regularHours, overtimeHours, hourlyRate, shiftType, date, consecutiveDays, isHoliday } = input;
   const rules = DEFAULT_OVERTIME_RULES;
   
+  // Validate inputs
+  const validRegularHours = safeNumber(regularHours);
+  const validOvertimeHours = safeNumber(overtimeHours);
+  const validHourlyRate = safeNumber(hourlyRate);
+  const validConsecutiveDays = safeNumber(consecutiveDays);
+  
   // Base pay calculations
-  const regularPay = regularHours * hourlyRate;
+  const regularPay = safeNumber(validRegularHours * validHourlyRate);
   
   // Determine overtime multiplier
   let overtimeMultiplier = rules.weekdayMultiplier;
@@ -55,29 +66,29 @@ export const calculateOvertimePay = (input: OvertimeCalculationInput): {
   }
   
   // Cap overtime hours based on rules
-  const cappedOvertimeHours = Math.min(overtimeHours, rules.maxDailyOvertimeHours);
+  const cappedOvertimeHours = Math.min(validOvertimeHours, rules.maxDailyOvertimeHours);
   
   // Calculate overtime pay
-  const baseovertimePay = cappedOvertimeHours * hourlyRate * overtimeMultiplier;
+  const baseovertimePay = safeNumber(cappedOvertimeHours * validHourlyRate * overtimeMultiplier);
   
   // Night differential (applies to all hours for night shifts)
   const nightDifferential = shiftType === 'Night' 
-    ? (regularHours + cappedOvertimeHours) * hourlyRate * rules.nightDifferential 
+    ? safeNumber((validRegularHours + cappedOvertimeHours) * validHourlyRate * rules.nightDifferential)
     : 0;
   
   // Consecutive days bonus (applies to total pay)
-  const consecutiveBonus = consecutiveDays >= 6 
-    ? (regularPay + baseovertimePay) * rules.consecutiveDayBonus 
+  const consecutiveBonus = validConsecutiveDays >= 6 
+    ? safeNumber((regularPay + baseovertimePay) * rules.consecutiveDayBonus)
     : 0;
   
-  const totalPay = regularPay + baseovertimePay + nightDifferential + consecutiveBonus;
+  const totalPay = safeNumber(regularPay + baseovertimePay + nightDifferential + consecutiveBonus);
   
   return {
-    regularPay: Math.round(regularPay),
-    overtimePay: Math.round(baseovertimePay),
-    nightDifferential: Math.round(nightDifferential),
-    consecutiveBonus: Math.round(consecutiveBonus),
-    totalPay: Math.round(totalPay)
+    regularPay: Math.round(safeNumber(regularPay)),
+    overtimePay: Math.round(safeNumber(baseovertimePay)),
+    nightDifferential: Math.round(safeNumber(nightDifferential)),
+    consecutiveBonus: Math.round(safeNumber(consecutiveBonus)),
+    totalPay: Math.round(safeNumber(totalPay))
   };
 };
 
@@ -92,7 +103,16 @@ export const calculateMonthlyOvertime = (
   totalOvertimePay: number;
   weeklyBreakdown: { week: number; hours: number; pay: number }[];
 } => {
+  if (!attendanceRecords || attendanceRecords.length === 0 || safeNumber(hourlyRate) <= 0) {
+    return {
+      totalOvertimeHours: 0,
+      totalOvertimePay: 0,
+      weeklyBreakdown: []
+    };
+  }
+
   const monthRecords = attendanceRecords.filter(record => {
+    if (!record.date) return false;
     const recordDate = new Date(record.date);
     return recordDate.getMonth() === month - 1 && 
            recordDate.getFullYear() === year && 
@@ -119,39 +139,41 @@ export const calculateMonthlyOvertime = (
     let weekOvertimePay = 0;
     
     weekRecords.forEach(record => {
-      if (record.overtimeHours > 0) {
+      const recordOvertimeHours = safeNumber(record.overtimeHours);
+      if (recordOvertimeHours > 0) {
         const overtimeCalc = calculateOvertimePay({
-          regularHours: record.regularHours,
-          overtimeHours: record.overtimeHours,
-          hourlyRate,
+          regularHours: safeNumber(record.regularHours),
+          overtimeHours: recordOvertimeHours,
+          hourlyRate: safeNumber(hourlyRate),
           shiftType: 'Day', // Default, should be determined from shift context
           date: record.date,
           consecutiveDays: 0, // Would need to calculate consecutive days
           isHoliday: false // Would need holiday calendar
         });
         
-        weekOvertimeHours += record.overtimeHours;
-        weekOvertimePay += overtimeCalc.overtimePay;
+        weekOvertimeHours += recordOvertimeHours;
+        weekOvertimePay += safeNumber(overtimeCalc.overtimePay);
       }
     });
     
     // Cap weekly overtime
     const cappedWeeklyHours = Math.min(weekOvertimeHours, DEFAULT_OVERTIME_RULES.maxWeeklyOvertimeHours);
-    const cappedWeeklyPay = weekOvertimePay * (cappedWeeklyHours / weekOvertimeHours);
+    const cappedWeeklyPay = weekOvertimeHours > 0 ? 
+      safeNumber(weekOvertimePay * (cappedWeeklyHours / weekOvertimeHours)) : 0;
     
     totalOvertimeHours += cappedWeeklyHours;
     totalOvertimePay += cappedWeeklyPay;
     
     weeklyBreakdown.push({
       week: weekNumber,
-      hours: cappedWeeklyHours,
-      pay: Math.round(cappedWeeklyPay)
+      hours: safeNumber(cappedWeeklyHours),
+      pay: Math.round(safeNumber(cappedWeeklyPay))
     });
   });
   
   return {
-    totalOvertimeHours: Number(totalOvertimeHours.toFixed(2)),
-    totalOvertimePay: Math.round(totalOvertimePay),
+    totalOvertimeHours: safeNumber(Number(totalOvertimeHours.toFixed(2))),
+    totalOvertimePay: Math.round(safeNumber(totalOvertimePay)),
     weeklyBreakdown
   };
 };

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useEmployeeContext } from './EmployeeContext';
 import { useAttendanceContext } from './AttendanceContext';
@@ -66,16 +67,43 @@ interface PayrollContextType {
 
 const PayrollContext = createContext<PayrollContextType | undefined>(undefined);
 
+// Helper function to ensure valid number
+const safeNumber = (value: any): number => {
+  const num = Number(value);
+  return isNaN(num) ? 0 : num;
+};
+
+// Helper function to validate salary structure
+const validateSalaryStructure = (salaryStructure: any) => {
+  if (!salaryStructure) return false;
+  
+  const requiredFields = ['basic', 'hra', 'da', 'specialAllowance', 'medicalAllowance', 'conveyanceAllowance', 'otherAllowances', 'ctc'];
+  return requiredFields.every(field => typeof salaryStructure[field] === 'number' && !isNaN(salaryStructure[field]));
+};
+
 export const PayrollProvider = ({ children }: { children: ReactNode }) => {
   const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
   const { employees } = useEmployeeContext();
   const { attendanceRecords } = useAttendanceContext();
   const { getEmployeeShift } = useShiftContext();
-  const { getApprovedLeaveForMonth, isOnLeave } = useLeaveContext();
+  const { getApprovedLeaveForMonth } = useLeaveContext();
 
   const calculatePayroll = (employeeId: number, month: string, year: number): PayrollRecord => {
+    console.log(`Calculating payroll for employee ${employeeId}, month ${month}, year ${year}`);
+    
     const employee = employees.find(emp => emp.id === employeeId);
-    if (!employee) throw new Error('Employee not found');
+    if (!employee) {
+      console.error('Employee not found:', employeeId);
+      throw new Error('Employee not found');
+    }
+
+    // Validate salary structure
+    if (!validateSalaryStructure(employee.salaryStructure)) {
+      console.error('Invalid salary structure for employee:', employeeId, employee.salaryStructure);
+      throw new Error('Invalid salary structure');
+    }
+
+    console.log('Employee salary structure:', employee.salaryStructure);
 
     // Get attendance records for the month
     const monthAttendance = attendanceRecords.filter(record => {
@@ -83,70 +111,122 @@ export const PayrollProvider = ({ children }: { children: ReactNode }) => {
       return recordDate.getMonth() === parseInt(month) - 1 && recordDate.getFullYear() === year && record.employeeId === employeeId;
     });
 
+    console.log('Month attendance records:', monthAttendance.length);
+
     const workingDays = 26; // Standard working days per month
     const presentDays = monthAttendance.filter(a => a.status === 'Present' || a.status === 'Late').length;
     const lateDays = monthAttendance.filter(a => a.status === 'Late').length;
     
-    // Leave calculations
-    const approvedLeaves = getApprovedLeaveForMonth(employeeId, parseInt(month), year);
-    const totalLeaveDays = approvedLeaves.reduce((sum, leave) => sum + leave.days, 0);
-    const paidLeaveDays = approvedLeaves.filter(leave => leave.isPaid).reduce((sum, leave) => sum + leave.days, 0);
-    const unpaidLeaveDays = totalLeaveDays - paidLeaveDays;
+    // Leave calculations with safe fallbacks
+    let approvedLeaves = [];
+    try {
+      approvedLeaves = getApprovedLeaveForMonth ? getApprovedLeaveForMonth(employeeId, parseInt(month), year) : [];
+    } catch (error) {
+      console.warn('Error getting approved leaves, using empty array:', error);
+      approvedLeaves = [];
+    }
+
+    const totalLeaveDays = safeNumber(approvedLeaves.reduce((sum, leave) => sum + safeNumber(leave.days), 0));
+    const paidLeaveDays = safeNumber(approvedLeaves.filter(leave => leave.isPaid).reduce((sum, leave) => sum + safeNumber(leave.days), 0));
+    const unpaidLeaveDays = safeNumber(totalLeaveDays - paidLeaveDays);
     
-    const absentDays = workingDays - presentDays - totalLeaveDays;
+    const absentDays = Math.max(0, workingDays - presentDays - totalLeaveDays);
 
     const salaryStructure = employee.salaryStructure;
-    const grossSalary = calculateGrossSalary(salaryStructure);
-    const dailySalary = grossSalary / workingDays;
-    const hourlyRate = dailySalary / 8; // 8 hours per day
     
-    // Calculate overtime
-    const overtimeCalculation = calculateMonthlyOvertime(
-      employeeId, 
-      parseInt(month), 
-      year, 
-      attendanceRecords, 
-      hourlyRate
-    );
+    // Calculate gross salary with validation
+    const grossSalary = safeNumber(calculateGrossSalary(salaryStructure));
+    console.log('Calculated gross salary:', grossSalary);
     
-    // Calculate shift differentials
+    if (grossSalary <= 0) {
+      console.error('Invalid gross salary calculated:', grossSalary);
+    }
+
+    const dailySalary = safeNumber(grossSalary / workingDays);
+    const hourlyRate = safeNumber(dailySalary / 8); // 8 hours per day
+    
+    console.log('Daily salary:', dailySalary, 'Hourly rate:', hourlyRate);
+    
+    // Calculate overtime with safe fallbacks
+    let overtimeCalculation = { totalOvertimeHours: 0, totalOvertimePay: 0 };
+    try {
+      if (hourlyRate > 0) {
+        overtimeCalculation = calculateMonthlyOvertime(
+          employeeId, 
+          parseInt(month), 
+          year, 
+          attendanceRecords, 
+          hourlyRate
+        );
+      }
+    } catch (error) {
+      console.warn('Error calculating overtime, using defaults:', error);
+    }
+
+    console.log('Overtime calculation:', overtimeCalculation);
+    
+    // Calculate shift differentials with safe fallbacks
     let nightDifferential = 0;
     let shiftDifferential = 0;
     
     monthAttendance.forEach(record => {
-      if (record.shiftId) {
-        const shiftData = getEmployeeShift(employeeId, record.date);
-        if (shiftData?.shift.nightDifferential) {
-          nightDifferential += (record.regularHours + record.overtimeHours) * hourlyRate * (shiftData.shift.nightDifferential / 100);
+      if (record.shiftId && getEmployeeShift) {
+        try {
+          const shiftData = getEmployeeShift(employeeId, record.date);
+          if (shiftData?.shift.nightDifferential) {
+            const recordHours = safeNumber(record.regularHours) + safeNumber(record.overtimeHours);
+            nightDifferential += safeNumber(recordHours * hourlyRate * (safeNumber(shiftData.shift.nightDifferential) / 100));
+          }
+        } catch (error) {
+          console.warn('Error calculating shift differential:', error);
         }
       }
     });
     
     // Leave deductions and encashments
-    const unpaidLeaveDeduction = Math.round(unpaidLeaveDays * dailySalary);
+    const unpaidLeaveDeduction = safeNumber(unpaidLeaveDays * dailySalary);
     const leaveEncashment = 0; // Would calculate based on unused leaves and policy
     
-    // Calculate Indian statutory deductions
-    const pf = calculatePF(salaryStructure);
-    const esi = calculateESI(salaryStructure).employee;
-    const professionalTax = calculateProfessionalTax(employee.state, grossSalary);
-    const tds = calculateTDS(salaryStructure.ctc); // Annual CTC for TDS calculation
-    const lateDeduction = Math.round(lateDays * (dailySalary * 0.1)); // 10% of daily salary per late day
-    const absentDeduction = Math.round(absentDays * dailySalary);
+    // Calculate Indian statutory deductions with safe fallbacks
+    let pf = 0, esi = 0, professionalTax = 0, tds = 0;
+    
+    try {
+      pf = safeNumber(calculatePF(salaryStructure));
+      esi = safeNumber(calculateESI(salaryStructure).employee);
+      professionalTax = safeNumber(calculateProfessionalTax(employee.state || 'Maharashtra', grossSalary));
+      tds = safeNumber(calculateTDS(safeNumber(salaryStructure.ctc)));
+    } catch (error) {
+      console.warn('Error calculating statutory deductions:', error);
+    }
+
+    const lateDeduction = safeNumber(lateDays * (dailySalary * 0.1)); // 10% of daily salary per late day
+    const absentDeduction = safeNumber(absentDays * dailySalary);
 
     const deductions = { 
-      pf, 
-      esi, 
-      professionalTax, 
-      tds, 
-      lateDeduction, 
-      absentDeduction,
-      unpaidLeaveDeduction
+      pf: safeNumber(pf), 
+      esi: safeNumber(esi), 
+      professionalTax: safeNumber(professionalTax), 
+      tds: safeNumber(tds), 
+      lateDeduction: safeNumber(lateDeduction), 
+      absentDeduction: safeNumber(absentDeduction),
+      unpaidLeaveDeduction: safeNumber(unpaidLeaveDeduction)
     };
     
+    console.log('Calculated deductions:', deductions);
+    
     // Calculate final salary with overtime and leave adjustments
-    const adjustedGrossSalary = grossSalary + overtimeCalculation.totalOvertimePay + nightDifferential + shiftDifferential + leaveEncashment;
-    const netSalary = adjustedGrossSalary - Object.values(deductions).reduce((sum, val) => sum + val, 0);
+    const adjustedGrossSalary = safeNumber(
+      grossSalary + 
+      safeNumber(overtimeCalculation.totalOvertimePay) + 
+      safeNumber(nightDifferential) + 
+      safeNumber(shiftDifferential) + 
+      safeNumber(leaveEncashment)
+    );
+    
+    const totalDeductions = safeNumber(Object.values(deductions).reduce((sum, val) => sum + safeNumber(val), 0));
+    const netSalary = safeNumber(adjustedGrossSalary - totalDeductions);
+
+    console.log('Final calculations - Adjusted Gross:', adjustedGrossSalary, 'Total Deductions:', totalDeductions, 'Net Salary:', netSalary);
 
     return {
       id: Date.now(),
@@ -154,31 +234,31 @@ export const PayrollProvider = ({ children }: { children: ReactNode }) => {
       month,
       year,
       salaryBreakdown: {
-        basic: salaryStructure.basic,
-        hra: salaryStructure.hra,
-        da: salaryStructure.da,
-        specialAllowance: salaryStructure.specialAllowance,
-        medicalAllowance: salaryStructure.medicalAllowance,
-        conveyanceAllowance: salaryStructure.conveyanceAllowance,
-        otherAllowances: salaryStructure.otherAllowances
+        basic: safeNumber(salaryStructure.basic),
+        hra: safeNumber(salaryStructure.hra),
+        da: safeNumber(salaryStructure.da),
+        specialAllowance: safeNumber(salaryStructure.specialAllowance),
+        medicalAllowance: safeNumber(salaryStructure.medicalAllowance),
+        conveyanceAllowance: safeNumber(salaryStructure.conveyanceAllowance),
+        otherAllowances: safeNumber(salaryStructure.otherAllowances)
       },
-      overtimeHours: overtimeCalculation.totalOvertimeHours,
-      overtimePay: overtimeCalculation.totalOvertimePay,
-      nightDifferential: Math.round(nightDifferential),
-      shiftDifferential: Math.round(shiftDifferential),
+      overtimeHours: safeNumber(overtimeCalculation.totalOvertimeHours),
+      overtimePay: safeNumber(overtimeCalculation.totalOvertimePay),
+      nightDifferential: Math.round(safeNumber(nightDifferential)),
+      shiftDifferential: Math.round(safeNumber(shiftDifferential)),
       bonuses: 0,
       leaveDetails: {
-        totalLeaveDays,
-        paidLeaveDays,
-        unpaidLeaveDays,
-        leaveDeduction: unpaidLeaveDeduction,
-        leaveEncashment
+        totalLeaveDays: safeNumber(totalLeaveDays),
+        paidLeaveDays: safeNumber(paidLeaveDays),
+        unpaidLeaveDays: safeNumber(unpaidLeaveDays),
+        leaveDeduction: safeNumber(unpaidLeaveDeduction),
+        leaveEncashment: safeNumber(leaveEncashment)
       },
       deductions,
-      grossSalary: Math.round(adjustedGrossSalary),
-      netSalary: Math.round(netSalary),
+      grossSalary: Math.round(safeNumber(adjustedGrossSalary)),
+      netSalary: Math.round(safeNumber(netSalary)),
       status: 'Draft',
-      basicSalary: salaryStructure.basic // For backward compatibility
+      basicSalary: safeNumber(salaryStructure.basic) // For backward compatibility
     };
   };
 
