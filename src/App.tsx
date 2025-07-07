@@ -9,6 +9,7 @@ import { ShiftProvider } from "@/contexts/ShiftContext";
 import { LeaveProvider } from "@/contexts/LeaveContext";
 import Index from "@/pages/Index";
 import Employees from "@/pages/Employees";
+import Locations from "@/pages/Locations";
 import Attendance from "@/pages/Attendance";
 import Payroll from "@/pages/Payroll";
 import Reports from "@/pages/Reports";
@@ -29,6 +30,7 @@ function App() {
                     <Routes>
                       <Route path="/" element={<Index />} />
                       <Route path="/employees" element={<Employees />} />
+                      <Route path="/locations" element={<Locations />} />
                       <Route path="/attendance" element={<Attendance />} />
                       <Route path="/payroll" element={<Payroll />} />
                       <Route path="/reports" element={<Reports />} />
