@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useEmployeeContext } from './EmployeeContext';
 import { useAttendanceContext } from './AttendanceContext';
@@ -86,7 +85,7 @@ export const PayrollProvider = ({ children }: { children: ReactNode }) => {
   const { employees } = useEmployeeContext();
   const { attendanceRecords } = useAttendanceContext();
   const { getEmployeeShift } = useShiftContext();
-  const { getApprovedLeaveForMonth } = useLeaveContext();
+  const leaveContext = useLeaveContext();
 
   const calculatePayroll = (employeeId: number, month: string, year: number): PayrollRecord => {
     console.log(`Calculating payroll for employee ${employeeId}, month ${month}, year ${year}`);
@@ -117,18 +116,28 @@ export const PayrollProvider = ({ children }: { children: ReactNode }) => {
     const presentDays = monthAttendance.filter(a => a.status === 'Present' || a.status === 'Late').length;
     const lateDays = monthAttendance.filter(a => a.status === 'Late').length;
     
-    // Leave calculations with safe fallbacks
-    let approvedLeaves = [];
-    try {
-      approvedLeaves = getApprovedLeaveForMonth ? getApprovedLeaveForMonth(employeeId, parseInt(month), year) : [];
-    } catch (error) {
-      console.warn('Error getting approved leaves, using empty array:', error);
-      approvedLeaves = [];
-    }
+    // Safe leave calculations with proper error handling
+    let approvedLeaves: any[] = [];
+    let totalLeaveDays = 0;
+    let paidLeaveDays = 0;
+    let unpaidLeaveDays = 0;
 
-    const totalLeaveDays = safeNumber(approvedLeaves.reduce((sum, leave) => sum + safeNumber(leave.days), 0));
-    const paidLeaveDays = safeNumber(approvedLeaves.filter(leave => leave.isPaid).reduce((sum, leave) => sum + safeNumber(leave.days), 0));
-    const unpaidLeaveDays = safeNumber(totalLeaveDays - paidLeaveDays);
+    if (leaveContext && leaveContext.getApprovedLeaveForMonth) {
+      try {
+        approvedLeaves = leaveContext.getApprovedLeaveForMonth(employeeId, parseInt(month), year) || [];
+        totalLeaveDays = safeNumber(approvedLeaves.reduce((sum, leave) => sum + safeNumber(leave.days), 0));
+        paidLeaveDays = safeNumber(approvedLeaves.filter(leave => leave.isPaid).reduce((sum, leave) => sum + safeNumber(leave.days), 0));
+        unpaidLeaveDays = safeNumber(totalLeaveDays - paidLeaveDays);
+        console.log('Leave calculation successful:', { totalLeaveDays, paidLeaveDays, unpaidLeaveDays });
+      } catch (error) {
+        console.warn('Error calculating leaves, using defaults:', error);
+        totalLeaveDays = 0;
+        paidLeaveDays = 0;
+        unpaidLeaveDays = 0;
+      }
+    } else {
+      console.warn('Leave context not available, using default leave values');
+    }
     
     const absentDays = Math.max(0, workingDays - presentDays - totalLeaveDays);
 
@@ -149,8 +158,8 @@ export const PayrollProvider = ({ children }: { children: ReactNode }) => {
     
     // Calculate overtime with safe fallbacks
     let overtimeCalculation = { totalOvertimeHours: 0, totalOvertimePay: 0 };
-    try {
-      if (hourlyRate > 0) {
+    if (hourlyRate > 0) {
+      try {
         overtimeCalculation = calculateMonthlyOvertime(
           employeeId, 
           parseInt(month), 
@@ -158,9 +167,9 @@ export const PayrollProvider = ({ children }: { children: ReactNode }) => {
           attendanceRecords, 
           hourlyRate
         );
+      } catch (error) {
+        console.warn('Error calculating overtime, using defaults:', error);
       }
-    } catch (error) {
-      console.warn('Error calculating overtime, using defaults:', error);
     }
 
     console.log('Overtime calculation:', overtimeCalculation);
@@ -169,19 +178,21 @@ export const PayrollProvider = ({ children }: { children: ReactNode }) => {
     let nightDifferential = 0;
     let shiftDifferential = 0;
     
-    monthAttendance.forEach(record => {
-      if (record.shiftId && getEmployeeShift) {
-        try {
-          const shiftData = getEmployeeShift(employeeId, record.date);
-          if (shiftData?.shift.nightDifferential) {
-            const recordHours = safeNumber(record.regularHours) + safeNumber(record.overtimeHours);
-            nightDifferential += safeNumber(recordHours * hourlyRate * (safeNumber(shiftData.shift.nightDifferential) / 100));
+    if (getEmployeeShift) {
+      monthAttendance.forEach(record => {
+        if (record.shiftId) {
+          try {
+            const shiftData = getEmployeeShift(employeeId, record.date);
+            if (shiftData?.shift.nightDifferential) {
+              const recordHours = safeNumber(record.regularHours) + safeNumber(record.overtimeHours);
+              nightDifferential += safeNumber(recordHours * hourlyRate * (safeNumber(shiftData.shift.nightDifferential) / 100));
+            }
+          } catch (error) {
+            console.warn('Error calculating shift differential:', error);
           }
-        } catch (error) {
-          console.warn('Error calculating shift differential:', error);
         }
-      }
-    });
+      });
+    }
     
     // Leave deductions and encashments
     const unpaidLeaveDeduction = safeNumber(unpaidLeaveDays * dailySalary);
