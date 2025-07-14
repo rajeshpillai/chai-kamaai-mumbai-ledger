@@ -274,7 +274,9 @@ export const PayrollProvider = ({ children }: { children: ReactNode }) => {
       grossSalary: Math.round(safeNumber(adjustedGrossSalary)),
       netSalary: Math.round(safeNumber(netSalary)),
       status: 'Draft',
-      basicSalary: safeNumber(salaryStructure.basic) // For backward compatibility
+      basicSalary: safeNumber(salaryStructure.basic), // For backward compatibility
+      complianceChecked: false,
+      auditTrail: [],
     };
   };
 

@@ -114,6 +114,9 @@ const AddEmployeeForm = ({ onSuccess }: AddEmployeeFormProps) => {
         bankName: data.bankName,
         state: data.state,
         status: "Active" as const,
+        complianceStatus: 'Pending' as const,
+        documentsProvided: [],
+        lastComplianceCheck: new Date().toISOString(),
       };
       
       addEmployee(employeeData);

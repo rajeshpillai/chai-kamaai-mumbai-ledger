@@ -108,7 +108,7 @@ const Index = () => {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Quick Actions */}
         <QuickActions />
