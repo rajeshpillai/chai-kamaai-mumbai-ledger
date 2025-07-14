@@ -36,6 +36,10 @@ export interface Employee {
   avatar: string;
   state: string; // For Professional Tax calculation
   defaultShiftId?: number; // New field for permanent shift assignment
+  // Compliance fields
+  complianceStatus: 'Compliant' | 'Pending' | 'Issues';
+  documentsProvided: string[]; // Array of document types provided
+  lastComplianceCheck: string; // ISO date string
 }
 
 interface EmployeeContextType {
@@ -95,7 +99,10 @@ const initialEmployees: Employee[] = [
     bankName: "HDFC Bank",
     avatar: "PS",
     state: "Maharashtra",
-    defaultShiftId: 1
+    defaultShiftId: 1,
+    complianceStatus: 'Compliant',
+    documentsProvided: ['PAN', 'Aadhaar', 'Bank Details', 'PF Nomination'],
+    lastComplianceCheck: '2024-12-01'
   },
   {
     id: 2,
@@ -121,7 +128,10 @@ const initialEmployees: Employee[] = [
     bankName: "ICICI Bank",
     avatar: "RP",
     state: "Maharashtra",
-    defaultShiftId: 1
+    defaultShiftId: 1,
+    complianceStatus: 'Compliant',
+    documentsProvided: ['PAN', 'Aadhaar', 'Bank Details'],
+    lastComplianceCheck: '2024-12-01'
   },
   {
     id: 3,
@@ -147,7 +157,10 @@ const initialEmployees: Employee[] = [
     bankName: "State Bank of India",
     avatar: "SK",
     state: "Maharashtra",
-    defaultShiftId: 2
+    defaultShiftId: 2,
+    complianceStatus: 'Pending',
+    documentsProvided: ['PAN', 'Aadhaar'],
+    lastComplianceCheck: '2024-11-15'
   },
   {
     id: 4,
@@ -173,7 +186,10 @@ const initialEmployees: Employee[] = [
     bankName: "Axis Bank",
     avatar: "AS",
     state: "Maharashtra",
-    defaultShiftId: 1
+    defaultShiftId: 1,
+    complianceStatus: 'Issues',
+    documentsProvided: ['PAN'],
+    lastComplianceCheck: '2024-10-20'
   },
   {
     id: 5,
@@ -199,7 +215,10 @@ const initialEmployees: Employee[] = [
     bankName: "Kotak Mahindra Bank",
     avatar: "MR",
     state: "Maharashtra",
-    defaultShiftId: 3
+    defaultShiftId: 3,
+    complianceStatus: 'Compliant',
+    documentsProvided: ['PAN', 'Aadhaar', 'Bank Details', 'PF Nomination', 'ESI Details'],
+    lastComplianceCheck: '2024-12-01'
   }
 ];
 

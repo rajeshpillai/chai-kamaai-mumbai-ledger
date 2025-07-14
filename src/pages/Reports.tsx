@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import AttendanceReports from "@/components/AttendanceReports";
 import PayrollReports from "@/components/PayrollReports";
@@ -53,10 +54,53 @@ const Reports = () => {
           </TabsContent>
 
           <TabsContent value="compliance">
-            <Card className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Compliance Reports</h3>
-              <p className="text-gray-600">Compliance and regulatory reports coming soon...</p>
-            </Card>
+            <div className="space-y-6">
+              <Card className="p-6">
+                <h3 className="text-xl font-semibold mb-4">Statutory Reports</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <h4 className="font-medium mb-2">PF Returns</h4>
+                    <p className="text-sm text-gray-600 mb-3">Monthly PF contribution reports</p>
+                    <Button size="sm" variant="outline">Generate Report</Button>
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <h4 className="font-medium mb-2">ESI Returns</h4>
+                    <p className="text-sm text-gray-600 mb-3">Employee State Insurance reports</p>
+                    <Button size="sm" variant="outline">Generate Report</Button>
+                  </div>
+                  <div className="p-4 bg-purple-50 rounded-lg">
+                    <h4 className="font-medium mb-2">TDS Reports</h4>
+                    <p className="text-sm text-gray-600 mb-3">Tax deduction at source reports</p>
+                    <Button size="sm" variant="outline">Generate Report</Button>
+                  </div>
+                  <div className="p-4 bg-orange-50 rounded-lg">
+                    <h4 className="font-medium mb-2">PT Returns</h4>
+                    <p className="text-sm text-gray-600 mb-3">Professional Tax monthly reports</p>
+                    <Button size="sm" variant="outline">Generate Report</Button>
+                  </div>
+                  <div className="p-4 bg-red-50 rounded-lg">
+                    <h4 className="font-medium mb-2">Form 16</h4>
+                    <p className="text-sm text-gray-600 mb-3">Annual salary certificates</p>
+                    <Button size="sm" variant="outline">Generate Form 16</Button>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium mb-2">Audit Reports</h4>
+                    <p className="text-sm text-gray-600 mb-3">Compliance audit trails</p>
+                    <Button size="sm" variant="outline">View Audit Trail</Button>
+                  </div>
+                </div>
+              </Card>
+              
+              <Card className="p-6">
+                <h3 className="text-xl font-semibold mb-4">Export Options</h3>
+                <div className="flex flex-wrap gap-3">
+                  <Button variant="outline">Export to Excel</Button>
+                  <Button variant="outline">Export to PDF</Button>
+                  <Button variant="outline">Send via Email</Button>
+                  <Button variant="outline">Schedule Reports</Button>
+                </div>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

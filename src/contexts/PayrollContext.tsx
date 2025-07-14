@@ -54,6 +54,11 @@ export interface PayrollRecord {
   processedDate?: string;
   // Keep for backward compatibility
   basicSalary: number;
+  // Compliance fields
+  complianceChecked: boolean;
+  auditTrail: string[]; // Array of audit log IDs
+  approvedBy?: string;
+  approvedDate?: string;
 }
 
 interface PayrollContextType {

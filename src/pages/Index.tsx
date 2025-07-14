@@ -1,7 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Calculator, Clock, FileText, MapPin, TrendingUp, Building } from "lucide-react";
+import { Users, Calculator, Clock, FileText, MapPin, TrendingUp, Building, Calendar } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import StatsCard from "@/components/StatsCard";
 import QuickActions from "@/components/QuickActions";
@@ -63,6 +63,51 @@ const Index = () => {
             trend="+3%" 
             color="bg-purple-500" 
           />
+        </div>
+
+        {/* Compliance Dashboard Widget */}
+        <Card className="p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Compliance Overview</h3>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate("/settings")}
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              Manage Compliance
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-green-50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Documents Filed</p>
+                  <p className="text-2xl font-bold text-green-600">15/17</p>
+                </div>
+                <FileText className="h-8 w-8 text-green-500" />
+              </div>
+            </div>
+            <div className="p-4 bg-orange-50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Pending Actions</p>
+                  <p className="text-2xl font-bold text-orange-600">2</p>
+                </div>
+                <Clock className="h-8 w-8 text-orange-500" />
+              </div>
+            </div>
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Next Deadline</p>
+                  <p className="text-lg font-bold text-blue-600">Jan 7</p>
+                  <p className="text-xs text-gray-600">TDS Return</p>
+                </div>
+                <Calendar className="h-8 w-8 text-blue-500" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Quick Actions */}

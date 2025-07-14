@@ -7,6 +7,8 @@ import { AttendanceProvider } from "@/contexts/AttendanceContext";
 import { PayrollProvider } from "@/contexts/PayrollContext";
 import { ShiftProvider } from "@/contexts/ShiftContext";
 import { LeaveProvider } from "@/contexts/LeaveContext";
+import { AuditProvider } from "@/contexts/AuditContext";
+import { ComplianceProvider } from "@/contexts/ComplianceContext";
 import Index from "@/pages/Index";
 import Employees from "@/pages/Employees";
 import Locations from "@/pages/Locations";
@@ -20,31 +22,35 @@ import "./App.css";
 function App() {
   return (
     <Router>
-      <LocationProvider>
-        <EmployeeProvider>
-          <ShiftProvider>
-            <LeaveProvider>
-              <AttendanceProvider>
-                <PayrollProvider>
-                  <div className="min-h-screen bg-gray-50">
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/employees" element={<Employees />} />
-                      <Route path="/locations" element={<Locations />} />
-                      <Route path="/attendance" element={<Attendance />} />
-                      <Route path="/payroll" element={<Payroll />} />
-                      <Route path="/reports" element={<Reports />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </div>
-                  <Toaster />
-                </PayrollProvider>
-              </AttendanceProvider>
-            </LeaveProvider>
-          </ShiftProvider>
-        </EmployeeProvider>
-      </LocationProvider>
+      <AuditProvider>
+        <ComplianceProvider>
+          <LocationProvider>
+            <EmployeeProvider>
+              <ShiftProvider>
+                <LeaveProvider>
+                  <AttendanceProvider>
+                    <PayrollProvider>
+                      <div className="min-h-screen bg-gray-50">
+                        <Routes>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/employees" element={<Employees />} />
+                          <Route path="/locations" element={<Locations />} />
+                          <Route path="/attendance" element={<Attendance />} />
+                          <Route path="/payroll" element={<Payroll />} />
+                          <Route path="/reports" element={<Reports />} />
+                          <Route path="/settings" element={<Settings />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </div>
+                      <Toaster />
+                    </PayrollProvider>
+                  </AttendanceProvider>
+                </LeaveProvider>
+              </ShiftProvider>
+            </EmployeeProvider>
+          </LocationProvider>
+        </ComplianceProvider>
+      </AuditProvider>
     </Router>
   );
 }
