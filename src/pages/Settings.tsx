@@ -8,7 +8,8 @@ import ShiftScheduling from "@/components/ShiftScheduling";
 import LeaveManagement from "@/components/LeaveManagement";
 import PayrollConfiguration from "@/components/PayrollConfiguration";
 import ComplianceConfiguration from "@/components/ComplianceConfiguration";
-import { Settings as SettingsIcon, Clock, Users, Calendar, FileText, Plane } from "lucide-react";
+import WageConfiguration from "@/components/WageConfiguration";
+import { Settings as SettingsIcon, Clock, Users, Calendar, FileText, Plane, DollarSign } from "lucide-react";
 
 const Settings = () => {
   return (
@@ -22,7 +23,7 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue="shifts" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="shifts" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
               Shift Setup
@@ -42,6 +43,10 @@ const Settings = () => {
             <TabsTrigger value="payroll" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Payroll Rules
+            </TabsTrigger>
+            <TabsTrigger value="wages" className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Wage Config
             </TabsTrigger>
             <TabsTrigger value="compliance" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -71,6 +76,10 @@ const Settings = () => {
 
           <TabsContent value="payroll">
             <PayrollConfiguration />
+          </TabsContent>
+
+          <TabsContent value="wages">
+            <WageConfiguration />
           </TabsContent>
 
           <TabsContent value="compliance">

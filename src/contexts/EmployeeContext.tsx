@@ -40,6 +40,17 @@ export interface Employee {
   complianceStatus: 'Compliant' | 'Pending' | 'Issues';
   documentsProvided: string[]; // Array of document types provided
   lastComplianceCheck: string; // ISO date string
+  // Wage Configuration fields
+  payType?: 'Monthly' | 'Hourly' | 'Daily' | 'Piece-rate' | 'Commission';
+  hourlyRate?: number;
+  dailyRate?: number;
+  pieceRates?: { [taskType: string]: number };
+  commissionStructure?: {
+    type: 'percentage' | 'tiered' | 'flat';
+    rate?: number;
+    tiers?: { min: number; max: number; rate: number }[];
+    target?: number;
+  };
 }
 
 interface EmployeeContextType {
